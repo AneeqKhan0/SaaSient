@@ -39,7 +39,7 @@ export default function DashboardHome() {
     const [coldLeads, setColdLeads] = useState(0);
 
     const todayStartISO = useMemo(() => toISOStartOfDay(new Date()), []);
-    const activeWindowStartISO = useMemo(() => toISOStartOfDay(addDays(new Date(), -1)), []); // last 24h
+    const activeWindowStartISO = useMemo(() => toISOStartOfDay(addDays(new Date(), -1)), []);
 
     async function loadMetrics() {
         setError(null);
@@ -47,8 +47,7 @@ export default function DashboardHome() {
         try {
             setLoading(true);
 
-            // Leads contacted today:
-            const todayDateStr = ymd(new Date()); // YYYY-MM-DD
+            const todayDateStr = ymd(new Date());
 
             const leadsA = await supabase
                 .from('lead_store')
@@ -67,7 +66,6 @@ export default function DashboardHome() {
 
             setLeadsToday(leadsCount);
 
-            // Active conversations last 24h
             const active = await supabase
                 .from('whatsapp_conversations')
                 .select('whatsapp_user_id', { count: 'exact', head: true })
@@ -75,7 +73,6 @@ export default function DashboardHome() {
 
             setActiveConvos(active.count ?? 0);
 
-            // HOT/WARM/COLD
             const [hot, warm, cold] = await Promise.all([
                 supabase.from('lead_store').select('id', { count: 'exact', head: true }).eq('Lead Category', 'HOT'),
                 supabase.from('lead_store').select('id', { count: 'exact', head: true }).eq('Lead Category', 'WARM'),
@@ -86,7 +83,6 @@ export default function DashboardHome() {
             setWarmLeads(warm.count ?? 0);
             setColdLeads(cold.count ?? 0);
 
-            // Messages received today
             const msgTry1 = await supabase
                 .from('Conversations')
                 .select('id', { count: 'exact', head: true })
@@ -96,7 +92,6 @@ export default function DashboardHome() {
             if (!msgTry1.error) {
                 setMessagesToday(msgTry1.count ?? 0);
             } else {
-                // fallback: count convos updated today (proxy)
                 const msgFallback = await supabase
                     .from('whatsapp_conversations')
                     .select('whatsapp_user_id', { count: 'exact', head: true })
@@ -112,14 +107,12 @@ export default function DashboardHome() {
         }
     }
 
-    // initial + interval refresh
     useEffect(() => {
         loadMetrics();
         const t = setInterval(loadMetrics, 20000);
         return () => clearInterval(t);
     }, []);
 
-    // realtime refresh
     useEffect(() => {
         const leadChannel = supabase
             .channel('rt-lead_store')
@@ -145,20 +138,21 @@ export default function DashboardHome() {
 
     return (
         <div style={styles.shell}>
-            <div style={styles.noise} />
+            <div style={styles.noise} aria-hidden="true" />
 
             <div style={styles.headerRow}>
                 <div>
                     <div style={styles.h1}>Overview</div>
-                    <div style={styles.sub}>Real-time metrics for leads & conversations</div>
+                    <div style={styles.sub}>Real-time metrics for leads &amp; conversations</div>
                 </div>
 
-                <div style={styles.livePill}>
+                {/* Improved LIVE pill */}
+                <div style={styles.livePill} aria-label="Live status">
                     <span style={styles.liveDot} />
-                    <span style={{ fontWeight: 900 }}>Live</span>
-                    <span style={{ color: 'rgba(255,255,255,0.65)', fontSize: 12 }}>
-                        {loading ? 'Syncing…' : 'Updated'}
-                    </span>
+                    <div style={styles.liveTextCol}>
+                        <div style={styles.liveTitle}>Live</div>
+                        <div style={styles.liveSub}>{loading ? 'Syncing…' : 'Updated'}</div>
+                    </div>
                 </div>
             </div>
 
@@ -168,7 +162,6 @@ export default function DashboardHome() {
                 </div>
             )}
 
-            {/* Top stats */}
             <div style={styles.statsGrid}>
                 <StatCard title="Leads contacted today" value={loading ? '—' : formatNum(leadsToday)} hint="From lead_store" icon="☎" />
                 <StatCard title="Messages received today" value={loading ? '—' : formatNum(messagesToday)} hint="WhatsApp activity" icon="💬" accent />
@@ -178,14 +171,13 @@ export default function DashboardHome() {
                 <StatCard title="COLD leads" value={loading ? '—' : formatNum(coldLeads)} hint="Lead Category" icon="❄" />
             </div>
 
-            {/* Actions */}
             <div style={styles.actions}>
                 <Link href="/dashboard/leads" style={styles.actionCard}>
                     <div style={styles.actionTop}>
                         <div style={styles.actionTitle}>Qualified Leads</div>
                         <div style={styles.actionBadge}>Open</div>
                     </div>
-                    <div style={styles.actionText}>View WhatsApp Agent & Voice Agent leads.</div>
+                    <div style={styles.actionText}>View WhatsApp Agent &amp; Voice Agent leads.</div>
                 </Link>
 
                 <Link href="/dashboard/whatsapp" style={styles.actionCard}>
@@ -215,17 +207,21 @@ function StatCard({
 }) {
     return (
         <div style={{ ...styles.card, ...(accent ? styles.cardAccent : {}) }}>
+            {/* FIX: consistent top row alignment across ALL cards */}
             <div style={styles.cardTop}>
-                <div style={styles.iconWrap}>{icon}</div>
-                <div style={{ minWidth: 0 }}>
+                <div style={styles.iconWrap} aria-hidden="true">
+                    {icon}
+                </div>
+
+                <div style={styles.cardTopText}>
                     <div style={styles.cardTitle}>{title}</div>
                     <div style={styles.cardHint}>{hint}</div>
                 </div>
             </div>
 
+            {/* FIX: remove those highlighted dots completely (spark removed) */}
             <div style={styles.valueRow}>
                 <div style={styles.cardValue}>{value}</div>
-                {accent && <div style={styles.spark} />}
             </div>
         </div>
     );
@@ -239,7 +235,7 @@ const styles: Record<string, React.CSSProperties> = {
         borderRadius: 24,
         overflow: 'hidden',
         background:
-            'radial-gradient(900px 420px at 18% 0%, rgba(0,153,249,0.26), transparent 60%), radial-gradient(700px 320px at 88% 15%, rgba(0,153,249,0.14), transparent 65%), linear-gradient(180deg, #060606, #050505)',
+            'radial-gradient(900px 420px at 18% 0%, rgba(0,153,249,0.22), transparent 60%), radial-gradient(700px 320px at 88% 15%, rgba(0,153,249,0.12), transparent 65%), linear-gradient(180deg, #060606, #050505)',
         border: '1px solid rgba(255,255,255,0.08)',
         boxShadow: '0 30px 120px rgba(0,0,0,0.65)',
     },
@@ -248,7 +244,7 @@ const styles: Record<string, React.CSSProperties> = {
         position: 'absolute',
         inset: 0,
         pointerEvents: 'none',
-        opacity: 0.065,
+        opacity: 0.06,
         backgroundImage:
             'url("data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 width=%27120%27 height=%27120%27%3E%3Cfilter id=%27n%27%3E%3CfeTurbulence type=%27fractalNoise%27 baseFrequency=%270.9%27 numOctaves=%272%27 stitchTiles=%27stitch%27/%3E%3C/filter%3E%3Crect width=%27120%27 height=%27120%27 filter=%27url(%23n)%27 opacity=%270.55%27/%3E%3C/svg%3E")',
     },
@@ -265,6 +261,7 @@ const styles: Record<string, React.CSSProperties> = {
     h1: { fontSize: 26, fontWeight: 980, letterSpacing: -0.4 },
     sub: { color: 'rgba(255,255,255,0.62)', marginTop: 6, fontSize: 13 },
 
+    // ===== Improved LIVE pill =====
     livePill: {
         display: 'flex',
         alignItems: 'center',
@@ -272,17 +269,22 @@ const styles: Record<string, React.CSSProperties> = {
         borderRadius: 999,
         padding: '10px 12px',
         border: '1px solid rgba(255,255,255,0.10)',
-        background: 'rgba(255,255,255,0.06)',
+        background: 'rgba(0,0,0,0.20)',
         backdropFilter: 'blur(16px)',
         WebkitBackdropFilter: 'blur(16px)',
+        boxShadow: '0 14px 60px rgba(0,0,0,0.35)',
     },
     liveDot: {
-        width: 8,
-        height: 8,
+        width: 10,
+        height: 10,
         borderRadius: 999,
         background: ACCENT,
-        boxShadow: `0 0 0 7px rgba(0,153,249,0.14)`,
+        boxShadow: `0 0 0 8px rgba(0,153,249,0.14)`,
+        flex: '0 0 auto',
     },
+    liveTextCol: { display: 'flex', flexDirection: 'column', lineHeight: 1.1 },
+    liveTitle: { fontWeight: 950, fontSize: 13 },
+    liveSub: { fontSize: 12, color: 'rgba(255,255,255,0.60)', marginTop: 2 },
 
     alert: {
         position: 'relative',
@@ -312,14 +314,27 @@ const styles: Record<string, React.CSSProperties> = {
         backdropFilter: 'blur(18px)',
         WebkitBackdropFilter: 'blur(18px)',
         boxShadow: '0 14px 55px rgba(0,0,0,0.40)',
+
+        // ✅ key: enforce consistent internal spacing
+        display: 'flex',
+        flexDirection: 'column',
+        justifyContent: 'space-between',
+        minHeight: 120,
     },
 
     cardAccent: {
-        border: `1px solid rgba(0,153,249,0.42)`,
-        background: 'linear-gradient(180deg, rgba(0,153,249,0.16), rgba(255,255,255,0.06))',
+        border: `1px solid rgba(0,153,249,0.30)`,
+        background: 'linear-gradient(180deg, rgba(0,153,249,0.12), rgba(255,255,255,0.06))',
     },
 
-    cardTop: { display: 'flex', alignItems: 'center', gap: 12 },
+    // ===== Consistent card header alignment across all cards =====
+    cardTop: {
+        display: 'grid',
+        gridTemplateColumns: '44px 1fr',
+        gap: 12,
+        alignItems: 'center',
+    },
+
     iconWrap: {
         width: 44,
         height: 44,
@@ -329,21 +344,28 @@ const styles: Record<string, React.CSSProperties> = {
         justifyContent: 'center',
         background: 'rgba(255,255,255,0.07)',
         border: '1px solid rgba(255,255,255,0.10)',
+        flex: '0 0 auto',
     },
 
-    cardTitle: { fontSize: 13, fontWeight: 950, color: 'rgba(255,255,255,0.92)' },
-    cardHint: { fontSize: 12, color: 'rgba(255,255,255,0.55)', marginTop: 4 },
+    cardTopText: {
+        minWidth: 0,
+        display: 'flex',
+        flexDirection: 'column',
+        justifyContent: 'center',
+    },
 
-    valueRow: { display: 'flex', alignItems: 'flex-end', justifyContent: 'space-between', marginTop: 12, gap: 10 },
+    cardTitle: { fontSize: 13, fontWeight: 950, color: 'rgba(255,255,255,0.92)', lineHeight: 1.25 },
+    cardHint: { fontSize: 12, color: 'rgba(255,255,255,0.55)', marginTop: 4, lineHeight: 1.2 },
+
+    valueRow: {
+        display: 'flex',
+        alignItems: 'flex-end',
+        justifyContent: 'space-between',
+        marginTop: 12,
+        gap: 10,
+    },
+
     cardValue: { fontSize: 32, fontWeight: 980, letterSpacing: -0.6 },
-
-    spark: {
-        width: 12,
-        height: 12,
-        borderRadius: 999,
-        background: ACCENT,
-        boxShadow: `0 0 0 12px rgba(0,153,249,0.10), 0 0 30px rgba(0,153,249,0.45)`,
-    },
 
     actions: {
         position: 'relative',
@@ -372,7 +394,7 @@ const styles: Record<string, React.CSSProperties> = {
         fontWeight: 950,
         padding: '6px 12px',
         borderRadius: 999,
-        color: '#000',
+        color: '#001018',
         background: ACCENT,
         boxShadow: `0 10px 30px rgba(0,153,249,0.25)`,
     },
