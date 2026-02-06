@@ -12,16 +12,19 @@ const geistMono = Geist_Mono({
   subsets: ["latin"],
 });
 
-export const metadata = {
+export const metadata: Metadata = {
   title: {
     default: 'SaaSient Dashboard',
     template: '%s · SaaSient Dashboard',
   },
   description: 'AI-powered lead & conversation dashboard',
   icons: {
-    icon: '/saasient-favicon.png',
+    icon: [
+      { url: '/saasient-favicon.png', type: 'image/png' },
+    ],
+    shortcut: '/saasient-favicon.png',
+    apple: '/saasient-favicon.png',
   },
-  manifest: '/manifest.webmanifest',
 };
 
 
@@ -33,6 +36,10 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
+      <head>
+        <link rel="icon" href="/saasient-favicon.png" type="image/png" />
+        <link rel="shortcut icon" href="/saasient-favicon.png" type="image/png" />
+      </head>
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
