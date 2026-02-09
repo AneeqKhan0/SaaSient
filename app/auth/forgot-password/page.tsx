@@ -7,7 +7,7 @@ import { supabase } from '@/lib/supabaseClient';
 
 const ACCENT = '#0099f9';
 
-export default function LoginPage() {
+export default function ForgotPasswordPage() {
     const router = useRouter();
 
     const cardRef = useRef<HTMLDivElement | null>(null);
@@ -19,22 +19,14 @@ export default function LoginPage() {
     const [pos, setPos] = useState({ x: 0, y: 0 });
 
     const [email, setEmail] = useState('');
-    const [password, setPassword] = useState('');
-
-    const [showPassword, setShowPassword] = useState(false);
-
     const [loading, setLoading] = useState(false);
     const [message, setMessage] = useState<string | null>(null);
 
-    // If already logged in, go straight to dashboard (or MFA if required)
+    // If already logged in, go straight to dashboard
     useEffect(() => {
         (async () => {
             const { data } = await supabase.auth.getSession();
-            if (!data.session) return;
-
-            const { data: aal } = await supabase.auth.mfa.getAuthenticatorAssuranceLevel();
-            if (aal?.nextLevel === 'aal2') router.replace('/auth/mfa');
-            else router.replace('/dashboard');
+            if (data.session) router.replace('/dashboard');
         })();
     }, [router]);
 
@@ -88,33 +80,21 @@ export default function LoginPage() {
         setLoading(true);
         setMessage(null);
 
-        const { error } = await supabase.auth.signInWithPassword({
-            email: email.trim(),
-            password,
-        });
+        try {
+            const redirectTo = `${window.location.origin}/auth/update-password`;
 
-        if (error) {
+            const { error } = await supabase.auth.resetPasswordForEmail(email.trim(), {
+                redirectTo,
+            });
+
+            if (error) throw error;
+
+            setMessage('If that email exists, we’ve sent a password reset link.');
+        } catch (err: any) {
+            setMessage(err?.message ?? 'Something went wrong. Please try again.');
+        } finally {
             setLoading(false);
-            setMessage(error.message);
-            return;
         }
-
-        // ✅ If user has MFA enrolled/required, Supabase will require aal2
-        const { data: aal, error: aalErr } = await supabase.auth.mfa.getAuthenticatorAssuranceLevel();
-
-        setLoading(false);
-
-        if (aalErr) {
-            setMessage(aalErr.message);
-            return;
-        }
-
-        if (aal?.nextLevel === 'aal2') {
-            router.replace('/auth/mfa');
-            return;
-        }
-
-        router.replace('/dashboard');
     }
 
     return (
@@ -131,8 +111,10 @@ export default function LoginPage() {
                         </div>
 
                         <div style={styles.header}>
-                            <h1 style={styles.title}>Sign in</h1>
-                            <p style={styles.subtitle}>Enter your email and password to sign in.</p>
+                            <h1 style={styles.title}>Reset password</h1>
+                            <p style={styles.subtitle}>
+                                Enter your email and we’ll send you a secure reset link.
+                            </p>
                         </div>
 
                         <form onSubmit={onSubmit} style={styles.form}>
@@ -154,46 +136,7 @@ export default function LoginPage() {
                                 />
                             </div>
 
-                            <div style={styles.field}>
-                                <label htmlFor="password" style={styles.label}>
-                                    Password
-                                </label>
-
-                                <div style={styles.passwordWrap}>
-                                    <input
-                                        id="password"
-                                        type={showPassword ? 'text' : 'password'}
-                                        value={password}
-                                        onChange={(e) => setPassword(e.target.value)}
-                                        placeholder="••••••••"
-                                        autoComplete="current-password"
-                                        required
-                                        style={styles.passwordInput}
-                                        onPointerEnter={() => setSuspendGlow(true)}
-                                        onPointerLeave={() => setSuspendGlow(false)}
-                                    />
-
-                                    <button
-                                        type="button"
-                                        aria-label={showPassword ? 'Hide password' : 'Show password'}
-                                        title={showPassword ? 'Hide password' : 'Show password'}
-                                        onClick={() => setShowPassword((v) => !v)}
-                                        style={styles.eyeBtn}
-                                        onPointerEnter={() => setSuspendGlow(true)}
-                                        onPointerLeave={() => setSuspendGlow(false)}
-                                    >
-                                        {showPassword ? <EyeOffIcon /> : <EyeIcon />}
-                                    </button>
-                                </div>
-
-                                <div style={styles.forgotRow}>
-                                    <Link href="/auth/forgot-password" style={styles.forgotLink}>
-                                        Forgot password?
-                                    </Link>
-                                </div>
-                            </div>
-
-                            {message && <p style={styles.error}>{message}</p>}
+                            {message && <p style={styles.info}>{message}</p>}
 
                             <div
                                 style={styles.actions}
@@ -201,17 +144,17 @@ export default function LoginPage() {
                                 onPointerLeave={() => setSuspendGlow(false)}
                             >
                                 <button type="submit" disabled={loading} className="btnPrimary">
-                                    {loading ? 'Signing in…' : 'Sign in'}
+                                    {loading ? 'Sending…' : 'Send reset link'}
                                 </button>
 
-                                <a href="mailto:support@saasient.com" className="btnSecondary">
-                                    Contact Support
-                                </a>
+                                <Link href="/login" className="btnSecondary">
+                                    Back to login
+                                </Link>
                             </div>
                         </form>
 
                         <p style={styles.footerNote}>
-                            If you don’t have a user yet, create one in Supabase → Authentication → Users.
+                            Tip: Check your spam/junk folder if you don’t see the email within a minute.
                         </p>
                     </div>
                 </div>
@@ -219,9 +162,15 @@ export default function LoginPage() {
 
             <style jsx global>{`
         @keyframes bgFloat {
-          0% { transform: translate3d(0, 0, 0) scale(1); }
-          50% { transform: translate3d(-30px, 20px, 0) scale(1.03); }
-          100% { transform: translate3d(30px, -20px, 0) scale(1.05); }
+          0% {
+            transform: translate3d(0, 0, 0) scale(1);
+          }
+          50% {
+            transform: translate3d(-30px, 20px, 0) scale(1.03);
+          }
+          100% {
+            transform: translate3d(30px, -20px, 0) scale(1.05);
+          }
         }
 
         .glowCard {
@@ -237,12 +186,14 @@ export default function LoginPage() {
           border-radius: inherit;
           pointer-events: none;
           opacity: calc(var(--a, 0) * 0.75);
+
           background: radial-gradient(
             120px 120px at var(--mx, 50%) var(--my, 50%),
             rgba(0, 153, 249, 0.62),
             rgba(0, 153, 249, 0.12) 38%,
             transparent 68%
           );
+
           filter: blur(10px);
           transition: opacity 180ms cubic-bezier(0.2, 0.8, 0.2, 1);
         }
@@ -254,6 +205,7 @@ export default function LoginPage() {
           border-radius: inherit;
           pointer-events: none;
           opacity: calc(var(--a, 0) * 1);
+
           background: radial-gradient(
             80px 80px at var(--mx, 50%) var(--my, 50%),
             rgba(0, 153, 249, 0.95),
@@ -269,14 +221,19 @@ export default function LoginPage() {
           transition: opacity 180ms cubic-bezier(0.2, 0.8, 0.2, 1);
         }
 
-        .glowCard > .glowInner { position: relative; z-index: 2; }
+        .glowCard > .glowInner {
+          position: relative;
+          z-index: 2;
+        }
 
         .glowCard:hover {
           transform: translateY(-1px);
           box-shadow: 0 30px 120px rgba(0, 0, 0, 0.8);
         }
 
-        .btnPrimary, .btnSecondary {
+        /* Buttons: NO hover animations */
+        .btnPrimary,
+        .btnSecondary {
           display: inline-flex;
           align-items: center;
           justify-content: center;
@@ -304,61 +261,27 @@ export default function LoginPage() {
           border: 1px solid rgba(255, 255, 255, 0.12);
         }
 
-        .btnPrimary:hover, .btnSecondary:hover { filter: none; transform: none; }
+        .btnPrimary:hover,
+        .btnSecondary:hover {
+          filter: none;
+          transform: none;
+        }
 
-        .btnPrimary:focus-visible, .btnSecondary:focus-visible {
+        .btnPrimary:focus-visible,
+        .btnSecondary:focus-visible {
           outline: 2px solid rgba(0, 153, 249, 0.75);
           outline-offset: 3px;
         }
 
         @media (prefers-reduced-motion: reduce) {
-          .glowCard, .glowCard::before, .glowCard::after { transition: none !important; }
+          .glowCard,
+          .glowCard::before,
+          .glowCard::after {
+            transition: none !important;
+          }
         }
       `}</style>
         </main>
-    );
-}
-
-function EyeIcon() {
-    return (
-        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden="true">
-            <path
-                d="M2.25 12s3.75-7.5 9.75-7.5S21.75 12 21.75 12s-3.75 7.5-9.75 7.5S2.25 12 2.25 12Z"
-                stroke="currentColor"
-                strokeWidth="1.8"
-            />
-            <path
-                d="M12 15.25A3.25 3.25 0 1 0 12 8.75a3.25 3.25 0 0 0 0 6.5Z"
-                stroke="currentColor"
-                strokeWidth="1.8"
-            />
-        </svg>
-    );
-}
-
-function EyeOffIcon() {
-    return (
-        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden="true">
-            <path d="M3 3l18 18" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" />
-            <path
-                d="M10.6 10.6A2.75 2.75 0 0 0 13.4 13.4"
-                stroke="currentColor"
-                strokeWidth="1.8"
-                strokeLinecap="round"
-            />
-            <path
-                d="M6.2 6.7C3.8 8.6 2.25 12 2.25 12s3.75 7.5 9.75 7.5c1.9 0 3.6-.5 5.05-1.25"
-                stroke="currentColor"
-                strokeWidth="1.8"
-                strokeLinecap="round"
-            />
-            <path
-                d="M9 4.9A9.8 9.8 0 0 1 12 4.5c6 0 9.75 7.5 9.75 7.5s-1.1 2.2-3.2 4.2"
-                stroke="currentColor"
-                strokeWidth="1.8"
-                strokeLinecap="round"
-            />
-        </svg>
     );
 }
 
@@ -387,6 +310,7 @@ const styles: Record<string, React.CSSProperties> = {
         color: '#fff',
         fontFamily: 'ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial',
     },
+
     centerWrap: {
         minHeight: '100vh',
         display: 'grid',
@@ -395,6 +319,7 @@ const styles: Record<string, React.CSSProperties> = {
         position: 'relative',
         zIndex: 2,
     },
+
     bg: {
         position: 'absolute',
         inset: '-20%',
@@ -408,6 +333,7 @@ const styles: Record<string, React.CSSProperties> = {
         filter: 'blur(2px)',
         pointerEvents: 'none',
     },
+
     noise: {
         position: 'absolute',
         inset: 0,
@@ -416,6 +342,7 @@ const styles: Record<string, React.CSSProperties> = {
         backgroundImage:
             'url("data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 width=%27120%27 height=%27120%27%3E%3Cfilter id=%27n%27%3E%3CfeTurbulence type=%27fractalNoise%27 baseFrequency=%270.9%27 numOctaves=%272%27/%3E%3C/filter%3E%3Crect width=%27120%27 height=%27120%27 filter=%27url(%23n)%27/%3E%3C/svg%3E")',
     },
+
     card: {
         width: 'min(560px, 100%)',
         borderRadius: 22,
@@ -425,6 +352,7 @@ const styles: Record<string, React.CSSProperties> = {
         WebkitBackdropFilter: 'blur(18px)',
         overflow: 'hidden',
     },
+
     inner: {
         padding: 30,
         display: 'flex',
@@ -432,6 +360,7 @@ const styles: Record<string, React.CSSProperties> = {
         alignItems: 'center',
         textAlign: 'center',
     },
+
     badgeRow: {
         display: 'inline-flex',
         alignItems: 'center',
@@ -443,7 +372,15 @@ const styles: Record<string, React.CSSProperties> = {
         border: '1px solid rgba(255,255,255,0.10)',
         lineHeight: 1,
     },
-    pillDot: { width: 8, height: 8, borderRadius: 999, background: ACCENT, flex: '0 0 auto' },
+
+    pillDot: {
+        width: 8,
+        height: 8,
+        borderRadius: 999,
+        background: ACCENT,
+        flex: '0 0 auto',
+    },
+
     pillText: {
         fontSize: 12,
         fontWeight: 700,
@@ -452,12 +389,30 @@ const styles: Record<string, React.CSSProperties> = {
         alignItems: 'center',
         lineHeight: 1,
     },
+
     header: { marginTop: 14 },
+
     title: { margin: 0, fontSize: 26, fontWeight: 900, letterSpacing: -0.4 },
+
     subtitle: { margin: '8px 0 0 0', color: 'rgba(255,255,255,0.66)', fontSize: 14, lineHeight: 1.6 },
-    form: { display: 'grid', gap: 14, marginTop: 20, width: 'min(420px, 100%)', textAlign: 'left' },
+
+    form: {
+        display: 'grid',
+        gap: 14,
+        marginTop: 20,
+        width: 'min(420px, 100%)',
+        textAlign: 'left',
+    },
+
     field: { display: 'grid', gap: 8 },
-    label: { fontSize: 12, fontWeight: 700, color: 'rgba(255,255,255,0.78)', letterSpacing: 0.2 },
+
+    label: {
+        fontSize: 12,
+        fontWeight: 700,
+        color: 'rgba(255,255,255,0.78)',
+        letterSpacing: 0.2,
+    },
+
     input: {
         height: 46,
         width: '100%',
@@ -468,46 +423,27 @@ const styles: Record<string, React.CSSProperties> = {
         padding: '0 12px',
         outline: 'none',
     },
-    passwordWrap: { position: 'relative', width: '100%', display: 'flex', alignItems: 'center' },
-    passwordInput: {
-        height: 46,
-        width: '100%',
-        borderRadius: 12,
-        border: '1px solid rgba(255,255,255,0.12)',
-        background: 'rgba(0,0,0,0.22)',
-        color: '#fff',
-        padding: '0 44px 0 12px',
-        outline: 'none',
+
+    actions: {
+        display: 'flex',
+        gap: 12,
+        marginTop: 6,
+        justifyContent: 'center',
+        flexWrap: 'wrap',
     },
-    eyeBtn: {
-        position: 'absolute',
-        right: 10,
-        top: '50%',
-        transform: 'translateY(-50%)',
-        width: 34,
-        height: 34,
-        borderRadius: 10,
-        border: '1px solid rgba(255,255,255,0.10)',
-        background: 'rgba(255,255,255,0.05)',
+
+    info: {
+        margin: 0,
         color: 'rgba(255,255,255,0.80)',
-        display: 'grid',
-        placeItems: 'center',
-        cursor: 'pointer',
-        padding: 0,
-    },
-    forgotRow: { marginTop: 8, display: 'flex', justifyContent: 'flex-end' },
-    forgotLink: {
-        fontSize: 12,
-        fontWeight: 700,
-        color: 'rgba(255,255,255,0.70)',
-        textDecoration: 'none',
-        padding: '4px 6px',
-        borderRadius: 8,
+        fontSize: 13,
+        lineHeight: 1.5,
+        textAlign: 'center',
+        padding: '10px 12px',
+        borderRadius: 12,
+        background: 'rgba(255,255,255,0.06)',
         border: '1px solid rgba(255,255,255,0.10)',
-        background: 'rgba(255,255,255,0.04)',
     },
-    actions: { display: 'flex', gap: 12, marginTop: 6, justifyContent: 'center', flexWrap: 'wrap' },
-    error: { margin: 0, color: '#ff6b6b', fontSize: 13, lineHeight: 1.4, textAlign: 'center' },
+
     footerNote: {
         marginTop: 14,
         color: 'rgba(255,255,255,0.55)',
