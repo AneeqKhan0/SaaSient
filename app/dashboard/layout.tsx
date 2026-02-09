@@ -62,8 +62,8 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
                         href="/dashboard/appointments"
                         label="Appointments"
                         active={pathname.startsWith('/dashboard/appointments')}
-                        disabled
                     />
+
                 </nav>
 
                 <div style={styles.sidebarFooter}>
