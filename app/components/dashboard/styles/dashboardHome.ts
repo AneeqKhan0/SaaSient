@@ -4,10 +4,10 @@ import { ACCENT } from '@/app/components/shared/constants';
 export const homeStyles: Record<string, React.CSSProperties> = {
     shell: {
         position: 'relative',
-        minHeight: 'calc(100vh - 60px)',
+        height: '100%',
         padding: 18,
         borderRadius: 24,
-        overflow: 'hidden',
+        overflow: 'auto',
         background:
             'radial-gradient(900px 420px at 18% 0%, rgba(0,153,249,0.22), transparent 60%), radial-gradient(700px 320px at 88% 15%, rgba(0,153,249,0.12), transparent 65%), linear-gradient(180deg, #060606, #050505)',
         border: '1px solid rgba(255,255,255,0.08)',
@@ -30,6 +30,7 @@ export const homeStyles: Record<string, React.CSSProperties> = {
         justifyContent: 'space-between',
         gap: 14,
         paddingBottom: 14,
+        flexWrap: 'wrap',
     },
 
     h1: { fontSize: 26, fontWeight: 980, letterSpacing: -0.4 },
@@ -76,6 +77,11 @@ export const homeStyles: Record<string, React.CSSProperties> = {
         display: 'grid',
         gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))',
         gap: 12,
+    },
+
+    upcomingSection: {
+        position: 'relative',
+        marginTop: 12,
     },
 
     actions: {

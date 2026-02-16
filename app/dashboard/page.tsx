@@ -4,6 +4,7 @@ import { useEffect, useMemo, useState } from 'react';
 import { supabase } from '@/lib/supabaseClient';
 import { StatCard } from '@/app/components/dashboard/StatCard';
 import { ActionCard } from '@/app/components/dashboard/ActionCard';
+import { UpcomingAppointments } from '@/app/components/dashboard/UpcomingAppointments';
 import { useFormatters } from '@/app/components/shared/hooks';
 import { toISOStartOfDay, addDays, ymd } from '@/app/components/shared/utils';
 import { homeStyles as styles } from '@/app/components/dashboard/styles/dashboardHome';
@@ -139,7 +140,7 @@ export default function DashboardHome() {
         </div>
       )}
 
-      <div style={styles.statsGrid}>
+      <div style={styles.statsGrid} className="statsGrid">
         <StatCard icon="☎️" title="Leads contacted today" value={loading ? '—' : formatNum(leadsToday)} subtitle="From lead_store" />
         <StatCard icon="💬" title="Messages received today" value={loading ? '—' : formatNum(messagesToday)} subtitle="WhatsApp activity" />
         <StatCard icon="🟢" title="Active conversations" value={loading ? '—' : formatNum(activeConvos)} subtitle="Last 24 hours" />
@@ -148,11 +149,31 @@ export default function DashboardHome() {
         <StatCard icon="❄️" title="COLD leads" value={loading ? '—' : formatNum(coldLeads)} subtitle="Lead Category" />
       </div>
 
-      <div style={styles.actions}>
+      <div style={styles.upcomingSection}>
+        <UpcomingAppointments />
+      </div>
+
+      <div style={styles.actions} className="actions">
         <ActionCard href="/dashboard/leads" title="Qualified Leads" description="View WhatsApp Agent &amp; Voice Agent leads." />
         <ActionCard href="/dashboard/whatsapp" title="WhatsApp Conversations" description="Read-only WhatsApp-style threads." />
         <ActionCard href="/dashboard/appointments" title="Appointments" description="View scheduled appointments calendar." />
       </div>
+
+      <style jsx>{`
+        @media (max-width: 768px) {
+          .statsGrid {
+            grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)) !important;
+          }
+          .actions {
+            grid-template-columns: 1fr !important;
+          }
+        }
+        @media (max-width: 480px) {
+          .statsGrid {
+            grid-template-columns: 1fr !important;
+          }
+        }
+      `}</style>
     </div>
   );
 }

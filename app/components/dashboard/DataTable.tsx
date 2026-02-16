@@ -1,4 +1,6 @@
-import { ReactNode } from 'react';
+'use client';
+
+import { ReactNode, useState, useEffect } from 'react';
 import { colors, borderRadius, spacing } from '../shared/constants';
 import { SearchInput } from './SearchInput';
 import { Button } from '../shared/Button';
@@ -42,20 +44,114 @@ export function DataTable({
   emptyMessage = 'No items found.',
   note,
 }: DataTableProps) {
+  const [showDetail, setShowDetail] = useState(false);
+  const [isMobile, setIsMobile] = useState(false);
+
+  useEffect(() => {
+    const checkMobile = () => {
+      setIsMobile(window.innerWidth <= 980);
+    };
+    
+    checkMobile();
+    window.addEventListener('resize', checkMobile);
+    return () => window.removeEventListener('resize', checkMobile);
+  }, []);
+
+  useEffect(() => {
+    if (isMobile && activeId) {
+      setShowDetail(true);
+    }
+  }, [activeId, isMobile]);
+
   const activeItem = data.find((item) => getItemId(item) === activeId) || null;
 
+  const handleItemClick = (id: string) => {
+    onActiveChange(id);
+    if (isMobile) {
+      setShowDetail(true);
+    }
+  };
+
+  const handleBackToList = () => {
+    setShowDetail(false);
+  };
+
+  const getItemTitle = (item: any): string => {
+    return item?.customer_name || item?.name || item?.phone || item?.email || 'Item';
+  };
+
   return (
-    <div style={styles.shell}>
+    <div style={styles.shell} className="dataTableShell">
+      <style jsx global>{`
+        @media (max-width: 980px) {
+          .dataTableShell {
+            height: 100% !important;
+          }
+          .dataTableSplit {
+            grid-template-columns: 1fr !important;
+          }
+          .dataTableLeft {
+            display: ${showDetail ? 'none' : 'grid'} !important;
+            max-height: none !important;
+            height: 100% !important;
+            border-right: none !important;
+            border-bottom: 1px solid rgba(255,255,255,0.10) !important;
+          }
+          .dataTableRight {
+            display: ${showDetail ? 'flex' : 'none'} !important;
+            height: 100% !important;
+          }
+          .dataTableHeader {
+            flex-direction: column !important;
+            align-items: flex-start !important;
+          }
+          .dataTableHeaderRight {
+            width: 100%;
+            justify-content: flex-start !important;
+          }
+          .dataTableMobileHeader {
+            display: flex !important;
+          }
+        }
+        @media (min-width: 981px) {
+          .dataTableMobileHeader {
+            display: none !important;
+          }
+        }
+        @media (max-width: 640px) {
+          .dataTableShell {
+            gap: 8px !important;
+          }
+          .dataTableContent {
+            border-radius: 12px !important;
+          }
+          .dataTableSegment {
+            width: 100%;
+          }
+          .dataTableSegment button {
+            flex: 1;
+            font-size: 13px !important;
+          }
+          .dataTableSearchRow {
+            flex-direction: column !important;
+            align-items: stretch !important;
+          }
+          .dataTableCountPill {
+            width: 100%;
+            justify-content: center !important;
+          }
+        }
+      `}</style>
       {/* Header */}
-      <div style={styles.header}>
+      <div style={styles.header} className="dataTableHeader">
         <div style={{ minWidth: 0 }}>
           <div style={styles.h1}>{title}</div>
           {subtitle && <div style={styles.sub}>{subtitle}</div>}
         </div>
 
-        <div style={styles.headerRight}>
+        <div style={styles.headerRight} className="dataTableHeaderRight">
           {tabs && (
-            <div style={styles.segment}>
+            <div style={styles.segment} className="dataTableSegment">
               {tabs.map((tab) => (
                 <button key={tab.id} onClick={tab.onClick} style={segBtn(tab.active)}>
                   {tab.label}
@@ -77,14 +173,14 @@ export function DataTable({
       </div>
 
       {/* Search */}
-      <div style={styles.searchRow}>
+      <div style={styles.searchRow} className="dataTableSearchRow">
         <SearchInput
           value={searchValue}
           onChange={onSearchChange}
           placeholder="Search..."
         />
 
-        <div style={styles.countPill}>
+        <div style={styles.countPill} className="dataTableCountPill">
           <span style={styles.countDot} />
           <span style={{ fontWeight: 950 }}>
             {loading ? 'Loading…' : `${data.length} items`}
@@ -99,10 +195,10 @@ export function DataTable({
       )}
 
       {/* Content */}
-      <div style={styles.content}>
-        <div style={styles.split}>
+      <div style={styles.content} className="dataTableContent">
+        <div style={styles.split} className="dataTableSplit">
           {/* Left List */}
-          <aside style={styles.left}>
+          <aside style={styles.left} className="dataTableLeft">
             {loading ? (
               <div style={styles.muted}>Loading...</div>
             ) : data.length === 0 ? (
@@ -113,7 +209,7 @@ export function DataTable({
                 const isActive = activeId === id;
                 return (
                   <div key={id}>
-                    {renderItem(item, isActive, () => onActiveChange(id))}
+                    {renderItem(item, isActive, () => handleItemClick(id))}
                   </div>
                 );
               })
@@ -121,11 +217,23 @@ export function DataTable({
           </aside>
 
           {/* Right Detail */}
-          <section style={styles.right}>
+          <section style={styles.right} className="dataTableRight">
             {!activeItem ? (
               <div style={styles.emptyState}>Select an item to view details.</div>
             ) : (
-              renderDetail(activeItem)
+              <>
+                {isMobile && (
+                  <div style={styles.mobileHeader} className="dataTableMobileHeader">
+                    <button onClick={handleBackToList} style={styles.backBtn}>
+                      ←
+                    </button>
+                    <div style={styles.mobileHeaderTitle}>
+                      {getItemTitle(activeItem)}
+                    </div>
+                  </div>
+                )}
+                {renderDetail(activeItem)}
+              </>
             )}
           </section>
         </div>
@@ -151,7 +259,7 @@ function segBtn(active: boolean) {
 
 const styles = {
   shell: {
-    height: 'calc(100vh - 60px)',
+    height: '100%',
     overflow: 'hidden',
     display: 'flex',
     flexDirection: 'column' as const,
@@ -249,6 +357,52 @@ const styles = {
     minHeight: 0,
   },
   muted: { color: colors.text.secondary, padding: spacing.sm },
-  emptyState: { padding: spacing.lg, color: colors.text.secondary },
+  emptyState: { 
+    padding: spacing.lg, 
+    color: colors.text.secondary,
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    flex: 1,
+  },
+  mobileHeader: {
+    display: 'none',
+    position: 'sticky' as const,
+    top: 0,
+    zIndex: 100,
+    padding: spacing.md,
+    borderBottom: `1px solid ${colors.card.border}`,
+    background: 'rgba(12,18,32,0.95)',
+    backdropFilter: 'blur(20px)',
+    WebkitBackdropFilter: 'blur(20px)',
+    alignItems: 'center',
+    gap: spacing.md,
+    flex: '0 0 auto',
+  },
+  backBtn: {
+    width: 40,
+    height: 40,
+    borderRadius: borderRadius.sm,
+    border: `1px solid ${colors.card.border}`,
+    background: 'rgba(0,0,0,0.30)',
+    color: colors.text.primary,
+    fontSize: 20,
+    fontWeight: 900,
+    cursor: 'pointer',
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    flex: '0 0 auto',
+  },
+  mobileHeaderTitle: {
+    fontSize: 16,
+    fontWeight: 950,
+    color: colors.text.primary,
+    flex: 1,
+    minWidth: 0,
+    overflow: 'hidden',
+    textOverflow: 'ellipsis',
+    whiteSpace: 'nowrap' as const,
+  },
   note: { color: colors.text.tertiary, fontSize: 12 },
 };

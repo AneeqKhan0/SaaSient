@@ -14,8 +14,30 @@ type MonthViewProps = {
 
 export function MonthView({ gridDays, cursor, byDay, setActive, loading, formatTime }: MonthViewProps) {
     return (
-        <div style={styles.monthView}>
-            <div style={styles.weekdayHeader}>
+        <div style={styles.monthView} className="monthView">
+            <style jsx global>{`
+                @media (max-width: 768px) {
+                    .monthView .weekdayHeader {
+                        display: none !important;
+                    }
+                    .monthGrid {
+                        grid-template-columns: repeat(3, 1fr) !important;
+                    }
+                    .monthCell {
+                        min-height: 80px !important;
+                        padding: 8px !important;
+                    }
+                }
+                @media (max-width: 480px) {
+                    .monthGrid {
+                        grid-template-columns: 1fr !important;
+                    }
+                    .monthCell {
+                        min-height: auto !important;
+                    }
+                }
+            `}</style>
+            <div style={styles.weekdayHeader} className="weekdayHeader">
                 {['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'].map((d) => (
                     <div key={d} style={styles.weekdayCell}>
                         {d}
@@ -23,7 +45,7 @@ export function MonthView({ gridDays, cursor, byDay, setActive, loading, formatT
                 ))}
             </div>
 
-            <div style={styles.monthGrid}>
+            <div style={styles.monthGrid} className="monthGrid">
                 {gridDays.map((d) => {
                     const key = ymd(d);
                     const inMonth = d.getMonth() === cursor.getMonth();
@@ -38,6 +60,7 @@ export function MonthView({ gridDays, cursor, byDay, setActive, loading, formatT
                                 ...(inMonth ? {} : styles.monthCellMuted),
                                 ...(isToday ? styles.monthCellToday : {}),
                             }}
+                            className="monthCell"
                         >
                             <div style={styles.monthCellDate}>{d.getDate()}</div>
                             <div style={styles.monthCellBody}>

@@ -4,6 +4,7 @@ import { FormEvent, useEffect, useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { supabase } from '@/lib/supabaseClient';
+import { isValidEmail, sanitizeInput, RateLimiter } from '@/lib/security';
 import { AuthLayout } from '@/app/components/auth/AuthLayout';
 import { GlowCard } from '@/app/components/auth/GlowCard';
 import { AuthForm } from '@/app/components/auth/AuthForm';
@@ -15,6 +16,7 @@ export default function ForgotPasswordPage() {
   const [email, setEmail] = useState('');
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState<string | null>(null);
+  const [rateLimiter] = useState(() => new RateLimiter(3, 300000)); // 3 attempts per 5 minutes
 
   useEffect(() => {
     (async () => {
@@ -28,13 +30,31 @@ export default function ForgotPasswordPage() {
     setLoading(true);
     setMessage(null);
 
+    // Sanitize and validate email
+    const sanitizedEmail = sanitizeInput(email);
+    
+    if (!isValidEmail(sanitizedEmail)) {
+      setLoading(false);
+      setMessage('Please enter a valid email address');
+      return;
+    }
+
+    // Check rate limiting
+    if (!rateLimiter.canAttempt(sanitizedEmail)) {
+      setLoading(false);
+      setMessage('Too many reset attempts. Please wait 5 minutes and try again.');
+      return;
+    }
+
     try {
       const redirectTo = `${window.location.origin}/auth/update-password`;
-      const { error } = await supabase.auth.resetPasswordForEmail(email.trim(), { redirectTo });
+      const { error } = await supabase.auth.resetPasswordForEmail(sanitizedEmail, { redirectTo });
       if (error) throw error;
+      // Generic message to prevent email enumeration
       setMessage('If that email exists, we have sent a password reset link.');
     } catch (err: any) {
-      setMessage(err?.message ?? 'Something went wrong. Please try again.');
+      // Don't reveal if email exists or not
+      setMessage('If that email exists, we have sent a password reset link.');
     } finally {
       setLoading(false);
     }

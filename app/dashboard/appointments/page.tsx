@@ -4,6 +4,9 @@ import { useEffect, useMemo, useState } from 'react';
 import { supabase } from '@/lib/supabaseClient';
 import { CalendarView } from '@/app/components/dashboard/CalendarView';
 import { AppointmentModal } from '@/app/components/dashboard/AppointmentModal';
+import { OutlookMonthView } from '@/app/components/dashboard/appointments/OutlookMonthView';
+import { OutlookWeekView } from '@/app/components/dashboard/appointments/OutlookWeekView';
+import { OutlookDayView } from '@/app/components/dashboard/appointments/OutlookDayView';
 import { useFormatters } from '@/app/components/shared/hooks';
 import {
   startOfMonth,
@@ -23,6 +26,7 @@ export default function AppointmentsPage() {
   const [rows, setRows] = useState<LeadAppointmentRow[]>([]);
   const [active, setActive] = useState<LeadAppointmentRow | null>(null);
   const [viewMode, setViewMode] = useState<ViewMode>('month');
+  const [isMobile, setIsMobile] = useState(false);
 
   const [cursor, setCursor] = useState<Date>(() => {
     const d = new Date();
@@ -31,6 +35,17 @@ export default function AppointmentsPage() {
   });
 
   const { formatTime, formatFull, previewText } = useFormatters();
+
+  // Check if mobile
+  useEffect(() => {
+    const checkMobile = () => {
+      setIsMobile(window.innerWidth <= 768);
+    };
+    
+    checkMobile();
+    window.addEventListener('resize', checkMobile);
+    return () => window.removeEventListener('resize', checkMobile);
+  }, []);
 
   const monthStart = useMemo(() => startOfMonth(cursor), [cursor]);
   const weekStart = useMemo(() => startOfWeek(cursor), [cursor]);
@@ -150,6 +165,16 @@ export default function AppointmentsPage() {
     return dayLabel;
   };
 
+  const formatDate = (dateStr: string) => {
+    const date = new Date(dateStr);
+    return date.toLocaleDateString([], { weekday: 'long', month: 'long', day: 'numeric', year: 'numeric' });
+  };
+
+  const handleDayClick = (date: Date) => {
+    setCursor(date);
+    setViewMode('day');
+  };
+
   return (
     <>
       <CalendarView
@@ -161,34 +186,67 @@ export default function AppointmentsPage() {
         onPrev={goPrev}
         error={error}
       >
-        {viewMode === 'month' && (
-          <MonthView
-            gridDays={gridDays}
-            cursor={cursor}
-            byDay={byDay}
-            setActive={setActive}
-            loading={loading}
-            formatTime={formatTime}
-          />
-        )}
-        {viewMode === 'week' && (
-          <WeekView
-            weekDays={weekDays}
-            byDay={byDay}
-            setActive={setActive}
-            loading={loading}
-            formatTime={formatTime}
-          />
-        )}
-        {viewMode === 'day' && (
-          <DayView
-            cursor={cursor}
-            byDay={byDay}
-            setActive={setActive}
-            loading={loading}
-            formatTime={formatTime}
-            previewText={previewText}
-          />
+        {isMobile ? (
+          <>
+            {viewMode === 'month' && (
+              <OutlookMonthView
+                gridDays={gridDays}
+                cursor={cursor}
+                byDay={byDay}
+                setActive={setActive}
+                onDayClick={handleDayClick}
+                loading={loading}
+              />
+            )}
+            {viewMode === 'week' && (
+              <OutlookWeekView
+                weekDays={weekDays}
+                byDay={byDay}
+                setActive={setActive}
+                loading={loading}
+              />
+            )}
+            {viewMode === 'day' && (
+              <OutlookDayView
+                cursor={cursor}
+                byDay={byDay}
+                setActive={setActive}
+                loading={loading}
+              />
+            )}
+          </>
+        ) : (
+          <>
+            {viewMode === 'month' && (
+              <MonthView
+                gridDays={gridDays}
+                cursor={cursor}
+                byDay={byDay}
+                setActive={setActive}
+                loading={loading}
+                formatTime={formatTime}
+              />
+            )}
+            {viewMode === 'week' && (
+              <WeekView
+                weekDays={weekDays}
+                byDay={byDay}
+                setActive={setActive}
+                loading={loading}
+                formatTime={formatTime}
+              />
+            )}
+            {viewMode === 'day' && (
+              <DayView
+                cursor={cursor}
+                byDay={byDay}
+                setActive={setActive}
+                loading={loading}
+                formatTime={formatTime}
+                previewText={previewText}
+              />
+            )}
+          </>
         )}
       </CalendarView>
 

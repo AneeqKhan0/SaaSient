@@ -194,6 +194,7 @@ export default function WhatsAppPage() {
         loading={loadingList}
         error={errorList}
         getConversationId={(c) => getConvoKey(c)}
+        getNickname={(c) => nicknames[getConvoKey(c)]}
         emptyMessage="No conversations found."
         renderConversationItem={(conversation, isActive) => (
           <ConversationItem
@@ -204,61 +205,69 @@ export default function WhatsAppPage() {
             onNicknameChange={(nn) => handleNicknameChange(getConvoKey(conversation), nn)}
           />
         )}
-        renderChatHeader={(conversation) => (
-          <div style={styles.chatHeader} className="chatHeaderRow">
-            <div style={{ overflow: 'hidden', minWidth: 0, flex: '1 1 auto' }}>
-              <div style={styles.chatTitle}>
-                {conversation.name?.trim() || conversation.phone_number || conversation.whatsapp_user_id}
+        renderChatHeader={(conversation) => {
+          const currentNickname = nicknames[getConvoKey(conversation)];
+          return (
+            <div style={styles.chatHeader} className="chatHeaderRow">
+              <div style={{ overflow: 'hidden', minWidth: 0, flex: '1 1 auto' }}>
+                <div style={styles.chatTitle}>
+                  {conversation.name?.trim() || conversation.phone_number || conversation.whatsapp_user_id}
+                </div>
+
+                {/* Phone number + label + custom tag under name */}
+                <div style={styles.contactInfo}>
+                  {conversation.phone_number && (
+                    <span style={styles.contactChip}>
+                      📞 {conversation.phone_number}
+                    </span>
+                  )}
+                  {conversation.label && (
+                    <span style={styles.contactChip}>
+                      {conversation.label}
+                    </span>
+                  )}
+                  {currentNickname && (
+                    <span style={styles.tagChip}>
+                      🏷️ {currentNickname}
+                    </span>
+                  )}
+                </div>
               </div>
 
-              {/* Phone number + label under name */}
-              <div style={styles.contactInfo}>
-                {conversation.phone_number && (
-                  <span style={styles.contactChip}>
-                    📞 {conversation.phone_number}
-                  </span>
-                )}
-                {conversation.label && (
-                  <span style={styles.contactChip}>
-                    {conversation.label}
-                  </span>
-                )}
+              {/* Font size controls */}
+              <div style={styles.fontControls} className="chatFontControls">
+                <button
+                  onClick={() => setFontSizeIdx((i) => Math.max(0, i - 1))}
+                  disabled={fontSizeIdx === 0}
+                  style={{
+                    ...styles.fontBtn,
+                    opacity: fontSizeIdx === 0 ? 0.3 : 1,
+                  }}
+                  title="Decrease font size"
+                >
+                  A−
+                </button>
+                <span style={styles.fontLabel}>{currentFontSize}px</span>
+                <button
+                  onClick={() => setFontSizeIdx((i) => Math.min(FONT_SIZES.length - 1, i + 1))}
+                  disabled={fontSizeIdx === FONT_SIZES.length - 1}
+                  style={{
+                    ...styles.fontBtn,
+                    opacity: fontSizeIdx === FONT_SIZES.length - 1 ? 0.3 : 1,
+                  }}
+                  title="Increase font size"
+                >
+                  A+
+                </button>
+              </div>
+
+              <div style={styles.metaPill} className="chatMetaPill">
+                <div style={styles.metaLabel}>Updated</div>
+                <div style={styles.metaValue}>{formatTime(conversation.updated_at)}</div>
               </div>
             </div>
-
-            {/* Font size controls */}
-            <div style={styles.fontControls} className="chatFontControls">
-              <button
-                onClick={() => setFontSizeIdx((i) => Math.max(0, i - 1))}
-                disabled={fontSizeIdx === 0}
-                style={{
-                  ...styles.fontBtn,
-                  opacity: fontSizeIdx === 0 ? 0.3 : 1,
-                }}
-                title="Decrease font size"
-              >
-                A−
-              </button>
-              <span style={styles.fontLabel}>{currentFontSize}px</span>
-              <button
-                onClick={() => setFontSizeIdx((i) => Math.min(FONT_SIZES.length - 1, i + 1))}
-                disabled={fontSizeIdx === FONT_SIZES.length - 1}
-                style={{
-                  ...styles.fontBtn,
-                  opacity: fontSizeIdx === FONT_SIZES.length - 1 ? 0.3 : 1,
-                }}
-                title="Increase font size"
-              >
-                A+
-              </button>
-            </div>
-
-            <div style={styles.metaPill} className="chatMetaPill">
-              <div style={styles.metaLabel}>Updated</div>
-              <div style={styles.metaValue}>{formatTime(conversation.updated_at)}</div>
-            </div>
-          </div>
-        )}
+          );
+        }}
         renderMessages={(conversation) => (
           <div style={styles.messagesContainer}>
             {messages.map((message) => (
@@ -273,6 +282,40 @@ export default function WhatsAppPage() {
           </div>
         )}
       />
+
+      <style jsx global>{`
+        @media (max-width: 768px) {
+          .chatShell {
+            grid-template-columns: 1fr !important;
+          }
+          .chatSidebar {
+            display: none !important;
+          }
+          .chatMain {
+            border-left: none !important;
+          }
+          .chatHeaderRow {
+            flex-wrap: wrap !important;
+            gap: 8px !important;
+          }
+          .chatFontControls {
+            order: 3;
+            width: 100%;
+          }
+          .chatMetaPill {
+            min-width: auto !important;
+            flex: 1 1 auto !important;
+          }
+        }
+        @media (max-width: 480px) {
+          .chatHeaderRow {
+            font-size: 13px !important;
+          }
+          .chatFontControls {
+            padding: 6px 8px !important;
+          }
+        }
+      `}</style>
     </div>
   );
 }
@@ -305,6 +348,16 @@ const styles: Record<string, CSSProperties> = {
     borderRadius: borderRadius.xs,
     border: `1px solid ${colors.card.border}`,
     background: 'rgba(255,255,255,0.04)',
+    whiteSpace: 'nowrap',
+  },
+  tagChip: {
+    fontSize: 11,
+    color: 'rgba(0,180,255,0.9)',
+    fontWeight: 700,
+    padding: '3px 10px',
+    borderRadius: borderRadius.xs,
+    border: `1px solid rgba(0,153,249,0.35)`,
+    background: 'rgba(0,153,249,0.12)',
     whiteSpace: 'nowrap',
   },
   fontControls: {

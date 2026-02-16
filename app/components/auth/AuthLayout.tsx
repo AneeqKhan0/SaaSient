@@ -10,14 +10,25 @@ export function AuthLayout({ children }: AuthLayoutProps) {
   return (
     <div style={styles.shell}>
       <style>{keyframes}</style>
+      <style jsx global>{`
+        @media (max-width: 640px) {
+          .authShell {
+            padding: 16px !important;
+          }
+          .authOrb1, .authOrb2, .authOrb3 {
+            width: 300px !important;
+            height: 300px !important;
+          }
+        }
+      `}</style>
 
       {/* Deep base with gradient */}
       <div style={styles.baseBg} aria-hidden="true" />
 
       {/* Animated gradient mesh — visible colored blobs */}
-      <div style={styles.orb1} aria-hidden="true" />
-      <div style={styles.orb2} aria-hidden="true" />
-      <div style={styles.orb3} aria-hidden="true" />
+      <div style={styles.orb1} className="authOrb1" aria-hidden="true" />
+      <div style={styles.orb2} className="authOrb2" aria-hidden="true" />
+      <div style={styles.orb3} className="authOrb3" aria-hidden="true" />
 
       {/* Technical perspective grid */}
       <div style={styles.gridWrap} aria-hidden="true">
@@ -72,7 +83,7 @@ const styles: Record<string, CSSProperties> = {
     padding: 24,
     overflow: 'hidden',
     background: '#020206',
-  },
+  } as CSSProperties,
 
   baseBg: {
     position: 'fixed',

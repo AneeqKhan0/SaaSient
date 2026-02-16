@@ -125,6 +125,14 @@ export const appointmentStyles = {
         background: 'rgba(0,153,249,0.06)',
     },
 
+    emptyColumn: {
+        padding: 12,
+        fontSize: 12,
+        color: 'rgba(255,255,255,0.40)',
+        textAlign: 'center' as const,
+        fontStyle: 'italic' as const,
+    },
+
     // Day View
     dayView: {
         height: '100%',
@@ -178,5 +186,44 @@ export const appointmentStyles = {
     emptySlot: {
         height: '100%',
         minHeight: 44,
+    },
+
+    // Empty and loading states
+    loadingState: {
+        flex: 1,
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        padding: 40,
+    },
+    loadingText: {
+        fontSize: 16,
+        color: 'rgba(255,255,255,0.60)',
+        fontWeight: 600,
+    },
+    emptyDayState: {
+        flex: 1,
+        display: 'flex',
+        flexDirection: 'column' as const,
+        alignItems: 'center',
+        justifyContent: 'center',
+        padding: 40,
+        textAlign: 'center' as const,
+    },
+    emptyDayIcon: {
+        fontSize: 48,
+        marginBottom: 16,
+        opacity: 0.5,
+    },
+    emptyDayText: {
+        fontSize: 18,
+        fontWeight: 700,
+        color: 'rgba(255,255,255,0.80)',
+        marginBottom: 8,
+    },
+    emptyDayHint: {
+        fontSize: 14,
+        color: 'rgba(255,255,255,0.50)',
+        fontWeight: 500,
     },
 };

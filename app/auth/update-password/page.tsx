@@ -1,16 +1,17 @@
 'use client';
 
-import { FormEvent, useEffect, useMemo, useState } from 'react';
+import { FormEvent, useEffect, useMemo, useState, Suspense } from 'react';
 import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { supabase } from '@/lib/supabaseClient';
+import { isValidPassword } from '@/lib/security';
 import { AuthLayout } from '@/app/components/auth/AuthLayout';
 import { GlowCard } from '@/app/components/auth/GlowCard';
 import { AuthForm } from '@/app/components/auth/AuthForm';
 import { PasswordInput } from '@/app/components/auth/PasswordInput';
 import { Button } from '@/app/components/shared/Button';
 
-export default function UpdatePasswordPage() {
+function UpdatePasswordContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
 
@@ -78,10 +79,13 @@ export default function UpdatePasswordPage() {
     e.preventDefault();
     setMessage(null);
 
-    if (pw1.length < 8) {
-      setMessage('Password must be at least 8 characters.');
+    // Validate password
+    const passwordValidation = isValidPassword(pw1);
+    if (!passwordValidation.valid) {
+      setMessage(passwordValidation.message || 'Invalid password');
       return;
     }
+
     if (pw1 !== pw2) {
       setMessage('Passwords do not match.');
       return;
@@ -168,5 +172,30 @@ export default function UpdatePasswordPage() {
         )}
       </GlowCard>
     </AuthLayout>
+  );
+}
+
+export default function UpdatePasswordPage() {
+  return (
+    <Suspense fallback={
+      <AuthLayout>
+        <GlowCard>
+          {() => (
+            <AuthForm
+              title="Set a new password"
+              subtitle="Loading..."
+              badge="SaaSient Dashboard"
+              onSubmit={(e) => e.preventDefault()}
+            >
+              <p style={{ textAlign: 'center', color: 'rgba(255,255,255,0.80)', padding: '20px 0' }}>
+                Loading...
+              </p>
+            </AuthForm>
+          )}
+        </GlowCard>
+      </AuthLayout>
+    }>
+      <UpdatePasswordContent />
+    </Suspense>
   );
 }

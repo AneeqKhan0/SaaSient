@@ -10,10 +10,16 @@ import { colors } from '@/app/components/shared/constants';
 
 export default function HomePage() {
   return (
-    <AuthLayout>
-      <GlowCard>
-        {(setSuspendGlow) => (
-          <div style={styles.inner}>
+    <div style={styles.pageWrapper}>
+      <style jsx global>{`
+        body {
+          overflow: hidden !important;
+        }
+      `}</style>
+      <AuthLayout>
+        <GlowCard>
+          {(setSuspendGlow) => (
+            <div style={styles.inner}>
             <Badge>SaaSient Dashboard</Badge>
 
             <h1 style={styles.h1}>Lead &amp; Conversation Hub</h1>
@@ -38,10 +44,15 @@ export default function HomePage() {
         )}
       </GlowCard>
     </AuthLayout>
+    </div>
   );
 }
 
 const styles: Record<string, React.CSSProperties> = {
+  pageWrapper: {
+    height: '100vh',
+    overflow: 'hidden',
+  },
   inner: {
     padding: 30,
     display: 'flex',

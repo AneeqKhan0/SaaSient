@@ -18,13 +18,42 @@ export function AppointmentModal({ isOpen, onClose, appointment, formatFull }: A
   if (!isOpen) return null;
 
   return (
-    <div style={styles.overlay} onMouseDown={onClose}>
-      <div style={styles.modal} onMouseDown={(e) => e.stopPropagation()}>
-        <div style={styles.header}>
+    <div style={styles.overlay} onMouseDown={onClose} className="appointmentModalOverlay">
+      <style jsx global>{`
+        @media (max-width: 768px) {
+          .appointmentModal {
+            max-width: 95vw !important;
+            width: 95vw !important;
+            max-height: 90vh !important;
+          }
+          .appointmentModalHeader {
+            padding: 16px !important;
+          }
+          .appointmentModalTitle {
+            font-size: 16px !important;
+          }
+          .appointmentModalBody {
+            padding: 16px !important;
+          }
+          .appointmentModalRow {
+            grid-template-columns: 1fr !important;
+          }
+        }
+        @media (max-width: 480px) {
+          .appointmentModalIcon {
+            font-size: 24px !important;
+          }
+          .appointmentModalTitle {
+            font-size: 15px !important;
+          }
+        }
+      `}</style>
+      <div style={styles.modal} onMouseDown={(e) => e.stopPropagation()} className="appointmentModal">
+        <div style={styles.header} className="appointmentModalHeader">
           <div style={styles.headerContent}>
-            <div style={styles.icon}>📅</div>
-            <div>
-              <div style={styles.title}>
+            <div style={styles.icon} className="appointmentModalIcon">📅</div>
+            <div style={{ minWidth: 0, flex: 1 }}>
+              <div style={styles.title} className="appointmentModalTitle">
                 {appointment.customer_name?.trim() || 'Unknown Lead'}
               </div>
               <div style={styles.subtitle}>
@@ -34,7 +63,7 @@ export function AppointmentModal({ isOpen, onClose, appointment, formatFull }: A
           </div>
           <button
             type="button"
-            className="calendarBtn icon"
+            style={styles.closeButton}
             onClick={onClose}
             title="Close"
           >
@@ -42,7 +71,7 @@ export function AppointmentModal({ isOpen, onClose, appointment, formatFull }: A
           </button>
         </div>
 
-        <div style={styles.body}>
+        <div style={styles.body} className="appointmentModalBody">
           {appointment.requirements && (
             <div style={styles.section}>
               <div style={styles.label}>Requirements</div>
@@ -50,7 +79,7 @@ export function AppointmentModal({ isOpen, onClose, appointment, formatFull }: A
             </div>
           )}
 
-          <div style={styles.row}>
+          <div style={styles.row} className="appointmentModalRow">
             {appointment.email && (
               <div style={styles.section}>
                 <div style={styles.label}>Email</div>
@@ -142,12 +171,28 @@ const styles = {
     marginTop: 4,
     fontWeight: 600,
   },
+  closeButton: {
+    width: 36,
+    height: 36,
+    borderRadius: borderRadius.sm,
+    border: `1px solid ${colors.card.border}`,
+    background: colors.card.background,
+    color: colors.text.primary,
+    fontSize: 18,
+    fontWeight: 900,
+    cursor: 'pointer',
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    flex: '0 0 auto',
+  },
   body: {
     padding: 20,
     overflow: 'auto',
     display: 'flex',
     flexDirection: 'column' as const,
     gap: 16,
+    flex: 1,
   },
   section: {
     display: 'flex',
@@ -170,6 +215,7 @@ const styles = {
     color: colors.text.primary,
     lineHeight: 1.5,
     fontWeight: 600,
+    wordBreak: 'break-word' as const,
   },
   row: {
     display: 'grid',

@@ -26,7 +26,7 @@ export function CalendarView({
   error,
 }: CalendarViewProps) {
   return (
-    <div style={styles.shell}>
+    <div style={styles.shell} className="calendarShell">
       <style jsx global>{`
         .calendarBtn {
           height: 36px;
@@ -84,11 +84,58 @@ export function CalendarView({
           color: ${colors.accent};
           background: rgba(0,153,249,0.12);
         }
+        @media (max-width: 768px) {
+          .calendarShell {
+            height: 100% !important;
+          }
+          .calendarToolbar {
+            flex-direction: column !important;
+            height: auto !important;
+            padding: 12px !important;
+            gap: 12px !important;
+          }
+          .calendarToolbarLeft {
+            width: 100%;
+            justify-content: space-between !important;
+          }
+          .calendarDateLabel {
+            font-size: 16px !important;
+            margin-left: 0 !important;
+          }
+          .calendarViewToggle {
+            width: 100%;
+          }
+          .calendarToggle {
+            flex: 1;
+            padding: 0 12px !important;
+          }
+          .calendarContainer {
+            margin: 8px !important;
+          }
+        }
+        @media (max-width: 480px) {
+          .calendarBtn {
+            height: 32px !important;
+            padding: 0 12px !important;
+            font-size: 12px !important;
+          }
+          .calendarBtn.icon {
+            width: 32px !important;
+            font-size: 16px !important;
+          }
+          .calendarToggle {
+            height: 32px !important;
+            font-size: 12px !important;
+          }
+          .calendarDateLabel {
+            font-size: 14px !important;
+          }
+        }
       `}</style>
 
       {/* Toolbar */}
-      <div style={styles.toolbar}>
-        <div style={styles.toolbarLeft}>
+      <div style={styles.toolbar} className="calendarToolbar">
+        <div style={styles.toolbarLeft} className="calendarToolbarLeft">
           <button type="button" className="calendarBtn primary" onClick={onToday}>
             Today
           </button>
@@ -100,10 +147,10 @@ export function CalendarView({
               ›
             </button>
           </div>
-          <div style={styles.dateLabel}>{dateLabel}</div>
+          <div style={styles.dateLabel} className="calendarDateLabel">{dateLabel}</div>
         </div>
 
-        <div style={styles.viewToggle}>
+        <div style={styles.viewToggle} className="calendarViewToggle">
           <button
             type="button"
             className={`calendarToggle ${viewMode === 'day' ? 'active' : ''}`}
@@ -135,19 +182,20 @@ export function CalendarView({
       )}
 
       {/* Calendar Content */}
-      <div style={styles.calendarContainer}>{children}</div>
+      <div style={styles.calendarContainer} className="calendarContainer">{children}</div>
     </div>
   );
 }
 
 const styles = {
   shell: {
-    height: '100vh',
+    height: '100%',
     display: 'flex',
     flexDirection: 'column' as const,
     background: 'linear-gradient(135deg, #0f1419 0%, #1a1f2e 100%)',
     fontFamily: "'Segoe UI', 'Segoe UI Web', Tahoma, Arial, sans-serif",
     color: colors.text.primary,
+    overflow: 'hidden',
   },
   toolbar: {
     height: 56,
@@ -200,5 +248,6 @@ const styles = {
     margin: spacing.sm,
     borderRadius: borderRadius.lg,
     border: `1px solid ${colors.card.border}`,
+    minHeight: 0,
   },
 };

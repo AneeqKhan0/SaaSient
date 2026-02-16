@@ -4,6 +4,7 @@ import React, { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { supabase } from '@/lib/supabaseClient';
+import { isValidEmail, sanitizeInput, RateLimiter } from '@/lib/security';
 import { AuthLayout } from '@/app/components/auth/AuthLayout';
 import { GlowCard } from '@/app/components/auth/GlowCard';
 import { AuthForm } from '@/app/components/auth/AuthForm';
@@ -19,6 +20,7 @@ export default function LoginPage() {
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState<string | null>(null);
+  const [rateLimiter] = useState(() => new RateLimiter(5, 60000)); // 5 attempts per minute
 
   useEffect(() => {
     (async () => {
@@ -36,8 +38,25 @@ export default function LoginPage() {
     setLoading(true);
     setMessage(null);
 
+    // Sanitize inputs
+    const sanitizedEmail = sanitizeInput(email);
+
+    // Validate email format
+    if (!isValidEmail(sanitizedEmail)) {
+      setLoading(false);
+      setMessage('Please enter a valid email address');
+      return;
+    }
+
+    // Check rate limiting
+    if (!rateLimiter.canAttempt(sanitizedEmail)) {
+      setLoading(false);
+      setMessage('Too many login attempts. Please wait a minute and try again.');
+      return;
+    }
+
     const { error } = await supabase.auth.signInWithPassword({
-      email: email.trim(),
+      email: sanitizedEmail,
       password,
     });
 
@@ -46,6 +65,9 @@ export default function LoginPage() {
       setMessage(error.message);
       return;
     }
+
+    // Reset rate limiter on successful login
+    rateLimiter.reset(sanitizedEmail);
 
     const { data: aal, error: aalErr } = await supabase.auth.mfa.getAuthenticatorAssuranceLevel();
     setLoading(false);

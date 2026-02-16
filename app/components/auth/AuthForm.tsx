@@ -15,7 +15,29 @@ type AuthFormProps = {
 
 export function AuthForm({ title, subtitle, badge, onSubmit, children, message, messageType = 'error', footer }: AuthFormProps) {
   return (
-    <form onSubmit={onSubmit} style={styles.form}>
+    <form onSubmit={onSubmit} style={styles.form} className="authForm">
+      <style jsx global>{`
+        @media (max-width: 640px) {
+          .authForm {
+            padding: 20px !important;
+            gap: 16px !important;
+          }
+          .authFormTitle {
+            font-size: 24px !important;
+          }
+          .authFormSubtitle {
+            font-size: 13px !important;
+          }
+        }
+        @media (max-width: 480px) {
+          .authForm {
+            padding: 16px !important;
+          }
+          .authFormTitle {
+            font-size: 22px !important;
+          }
+        }
+      `}</style>
       {badge && (
         <div style={styles.badgeRow}>
           <Badge>{badge}</Badge>
@@ -23,8 +45,8 @@ export function AuthForm({ title, subtitle, badge, onSubmit, children, message, 
       )}
 
       <div style={styles.header}>
-        <h1 style={styles.title}>{title}</h1>
-        {subtitle && <p style={styles.subtitle}>{subtitle}</p>}
+        <h1 style={styles.title} className="authFormTitle">{title}</h1>
+        {subtitle && <p style={styles.subtitle} className="authFormSubtitle">{subtitle}</p>}
       </div>
 
       {message && (

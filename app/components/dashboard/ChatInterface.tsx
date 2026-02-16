@@ -1,4 +1,6 @@
-import { ReactNode } from 'react';
+'use client';
+
+import { ReactNode, useState, useEffect } from 'react';
 import { colors, borderRadius, spacing } from '../shared/constants';
 import { SearchInput } from './SearchInput';
 
@@ -34,52 +36,82 @@ export function ChatInterface({
   renderMessages,
   getConversationId,
   emptyMessage = 'No conversations found.',
-}: ChatInterfaceProps) {
+  getNickname,
+}: ChatInterfaceProps & { getNickname?: (conversation: any) => string | undefined }) {
+  const [showChat, setShowChat] = useState(false);
+  const [isMobile, setIsMobile] = useState(false);
+
+  useEffect(() => {
+    const checkMobile = () => {
+      setIsMobile(window.innerWidth <= 980);
+    };
+    
+    checkMobile();
+    window.addEventListener('resize', checkMobile);
+    return () => window.removeEventListener('resize', checkMobile);
+  }, []);
+
+  useEffect(() => {
+    if (isMobile && activeConversation) {
+      setShowChat(true);
+    }
+  }, [activeConversation, isMobile]);
+
+  const handleConversationSelect = (conversation: any) => {
+    onConversationSelect(conversation);
+    if (isMobile) {
+      setShowChat(true);
+    }
+  };
+
+  const handleBackToList = () => {
+    setShowChat(false);
+  };
+
   return (
-    <div style={styles.shell}>
+    <div style={styles.shell} className="chatShell">
       <style jsx global>{`
         @media (max-width: 980px) {
           .chatShell {
             grid-template-columns: 1fr !important;
+            height: 100% !important;
           }
           .chatLeft {
-            height: 42vh !important;
+            display: ${showChat ? 'none' : 'flex'} !important;
+            height: 100% !important;
           }
           .chatRight {
-            height: calc(100vh - 60px - 12px - 42vh) !important;
+            display: ${showChat ? 'flex' : 'none'} !important;
+            height: 100% !important;
+          }
+          .chatMobileHeader {
+            display: flex !important;
+            align-items: flex-start !important;
+          }
+          .chatHeaderDesktop {
+            display: none !important;
+          }
+        }
+        @media (min-width: 981px) {
+          .chatMobileHeader {
+            display: none !important;
           }
         }
         @media (max-width: 640px) {
           .chatShell {
-            grid-template-columns: 1fr !important;
-            gap: 6px !important;
-          }
-          .chatLeft {
-            height: 35vh !important;
-            border-radius: 10px !important;
-          }
-          .chatRight {
-            height: calc(100vh - 50px - 6px - 35vh) !important;
-            border-radius: 10px !important;
-          }
-          .chatHeaderRow {
-            flex-direction: column !important;
-            align-items: flex-start !important;
             gap: 8px !important;
           }
-          .chatMetaPill {
-            display: none !important;
+          .chatLeft {
+            border-radius: 12px !important;
           }
-          .chatFontControls {
-            position: absolute;
-            top: 8px;
-            right: 8px;
+          .chatRight {
+            border-radius: 12px !important;
           }
         }
       `}</style>
 
       {/* Left Panel - Conversations */}
-      <aside style={styles.left} className="chatLeft">
+      <aside style={styles.left} className="chatLeft chatSidebar">
         <div style={styles.leftHeader}>
           <div style={{ minWidth: 0 }}>
             <div style={styles.title}>{title}</div>
@@ -119,7 +151,7 @@ export function ChatInterface({
               return (
                 <div
                   key={id}
-                  onClick={() => onConversationSelect(conversation)}
+                  onClick={() => handleConversationSelect(conversation)}
                   style={{
                     ...styles.item,
                     ...(isActive ? styles.itemActive : {}),
@@ -134,12 +166,36 @@ export function ChatInterface({
       </aside>
 
       {/* Right Panel - Chat */}
-      <section style={styles.right} className="chatRight">
+      <section style={styles.right} className="chatRight chatMain">
         {!activeConversation ? (
           <div style={styles.emptyState}>Select a conversation to view messages.</div>
         ) : (
           <>
-            <div style={styles.chatHeader}>
+            {isMobile && (
+              <div style={styles.mobileHeader} className="chatMobileHeader">
+                <button onClick={handleBackToList} style={styles.backBtn}>
+                  ← 
+                </button>
+                <div style={styles.mobileHeaderContent}>
+                  <div style={styles.mobileHeaderInfo}>
+                    <div style={styles.mobileHeaderName}>
+                      {activeConversation.name?.trim() || activeConversation.phone_number || 'Unknown'}
+                    </div>
+                    {activeConversation.phone_number && (
+                      <div style={styles.mobileHeaderPhone}>
+                        {activeConversation.phone_number}
+                      </div>
+                    )}
+                  </div>
+                  {getNickname?.(activeConversation) && (
+                    <div style={styles.mobileHeaderTag}>
+                      🏷️ {getNickname(activeConversation)}
+                    </div>
+                  )}
+                </div>
+              </div>
+            )}
+            <div style={styles.chatHeader} className={isMobile ? 'chatHeaderDesktop' : ''}>
               {renderChatHeader(activeConversation)}
             </div>
             <div style={styles.chatBody}>
@@ -157,7 +213,7 @@ const styles = {
     display: 'grid',
     gridTemplateColumns: '360px 1fr',
     gap: spacing.sm,
-    height: 'calc(100vh - 60px)',
+    height: '100%',
     overflow: 'hidden',
     minHeight: 0,
   },
@@ -248,7 +304,87 @@ const styles = {
     border: `1px solid ${colors.card.borderAccent}`,
     boxShadow: '0 0 0 1px rgba(0,153,249,0.18), 0 14px 45px rgba(0,0,0,0.35)',
   },
-  emptyState: { padding: spacing.lg, color: colors.text.tertiary },
+  emptyState: { 
+    padding: spacing.lg, 
+    color: colors.text.tertiary,
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    flex: 1,
+  },
+  mobileHeader: {
+    display: 'none',
+    position: 'sticky' as const,
+    top: 0,
+    zIndex: 10,
+    padding: spacing.md,
+    borderBottom: `1px solid ${colors.card.border}`,
+    background: 'rgba(12,18,32,0.95)',
+    backdropFilter: 'blur(20px)',
+    WebkitBackdropFilter: 'blur(20px)',
+    alignItems: 'flex-start',
+    gap: spacing.md,
+    flex: '0 0 auto',
+  },
+  backBtn: {
+    width: 40,
+    height: 40,
+    borderRadius: borderRadius.sm,
+    border: `1px solid ${colors.card.border}`,
+    background: 'rgba(0,0,0,0.30)',
+    color: colors.text.primary,
+    fontSize: 20,
+    fontWeight: 900,
+    cursor: 'pointer',
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    flex: '0 0 auto',
+  },
+  mobileHeaderContent: {
+    flex: 1,
+    minWidth: 0,
+    display: 'flex',
+    alignItems: 'flex-start',
+    justifyContent: 'space-between',
+    gap: spacing.xs,
+  },
+  mobileHeaderInfo: {
+    flex: 1,
+    minWidth: 0,
+    overflow: 'hidden',
+  },
+  mobileHeaderName: {
+    fontSize: 16,
+    fontWeight: 950,
+    color: colors.text.primary,
+    whiteSpace: 'nowrap' as const,
+    overflow: 'hidden',
+    textOverflow: 'ellipsis',
+  },
+  mobileHeaderPhone: {
+    fontSize: 12,
+    color: colors.text.secondary,
+    fontWeight: 600,
+    marginTop: 2,
+    whiteSpace: 'nowrap' as const,
+    overflow: 'hidden',
+    textOverflow: 'ellipsis',
+  },
+  mobileHeaderTag: {
+    fontSize: 11,
+    color: 'rgba(0,180,255,0.9)',
+    fontWeight: 700,
+    padding: '4px 10px',
+    borderRadius: borderRadius.sm,
+    border: `1px solid rgba(0,153,249,0.35)`,
+    background: 'rgba(0,153,249,0.12)',
+    whiteSpace: 'nowrap' as const,
+    flex: '0 0 auto',
+    maxWidth: '100px',
+    overflow: 'hidden',
+    textOverflow: 'ellipsis',
+  },
   chatHeader: {
     padding: spacing.md,
     borderBottom: `1px solid ${colors.card.border}`,
@@ -260,5 +396,6 @@ const styles = {
     background: 'rgba(0,0,0,0.18)',
     flex: '1 1 auto',
     minHeight: 0,
+    WebkitOverflowScrolling: 'touch' as const,
   },
 };

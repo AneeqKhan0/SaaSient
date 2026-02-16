@@ -4,6 +4,7 @@ import { ReactNode, useEffect, useState } from 'react';
 import { usePathname, useRouter } from 'next/navigation';
 import { supabase } from '@/lib/supabaseClient';
 import { NavItem } from '@/app/components/dashboard/NavItem';
+import { MobileMenu } from '@/app/components/dashboard/MobileMenu';
 import { layoutStyles as styles } from '@/app/components/dashboard/styles/dashboardLayout';
 
 export default function DashboardLayout({ children }: { children: ReactNode }) {
@@ -31,6 +32,19 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
     <div style={styles.shell} className="dashShell">
       <div style={styles.bg} aria-hidden="true" />
       <div style={styles.noise} aria-hidden="true" />
+
+      <div style={styles.mobileHeader} className="dashMobileHeader">
+        <div style={styles.brand}>
+          <div style={styles.logoWrap} aria-hidden="true">
+            <div style={styles.logoInner}>S</div>
+          </div>
+          <div style={{ lineHeight: 1.05 }}>
+            <div style={styles.brandTitle}>SaaSient</div>
+            <div style={styles.brandSub}>Dashboard</div>
+          </div>
+        </div>
+        <MobileMenu email={email} onSignOut={signOut} />
+      </div>
 
       <aside style={styles.sidebar} className="dashSidebar">
         <div style={styles.brand}>
@@ -114,47 +128,44 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
           .dashShell {
             grid-template-columns: 1fr !important;
             grid-template-rows: auto 1fr !important;
+            overflow: hidden !important;
+          }
+          .dashMobileHeader {
+            display: flex !important;
+          }
+          .dashMobileHeader button {
+            display: flex !important;
+          }
+          .dashMobileHeader .mobileMenuContainer {
+            display: flex !important;
           }
           .dashSidebar {
-            position: sticky;
-            top: 0;
-            z-index: 10;
-            border-right: none !important;
-            border-bottom: 1px solid rgba(255, 255, 255, 0.08) !important;
-            padding: 12px !important;
-            background: rgba(10, 12, 16, 0.8) !important;
-            backdrop-filter: blur(14px);
-            -webkit-backdrop-filter: blur(14px);
+            display: none !important;
           }
-          .dashNav {
-            grid-auto-flow: column;
-            grid-auto-columns: 1fr;
-            overflow-x: auto;
-            gap: 10px !important;
-            padding-bottom: 6px;
-            scrollbar-width: none;
+          .dashMain { 
+            padding: 14px !important;
+            overflow: hidden !important;
           }
-          .dashNav::-webkit-scrollbar { display: none; }
-          .dashMain { padding: 14px !important; }
-          .dashContent { min-height: auto !important; }
-          .dashFooter { display: none !important; }
+          .dashContent { 
+            min-height: calc(100vh - 80px) !important;
+            max-height: calc(100vh - 80px) !important;
+            padding: 14px !important;
+            overflow: auto !important;
+          }
         }
 
         @media (max-width: 640px) {
-          .dashShell {
-            grid-template-rows: auto 1fr !important;
-          }
-          .dashSidebar {
-            padding: 8px !important;
-          }
-          .dashNav {
-            gap: 6px !important;
-          }
           .dashMain {
-            padding: 8px !important;
+            padding: 10px !important;
           }
           .dashContent {
-            border-radius: 10px !important;
+            border-radius: 12px !important;
+            padding: 12px !important;
+            min-height: calc(100vh - 70px) !important;
+            max-height: calc(100vh - 70px) !important;
+          }
+          .dashMobileHeader {
+            padding: 10px 12px !important;
           }
         }
       `}</style>

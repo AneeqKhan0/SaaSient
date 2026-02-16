@@ -89,6 +89,20 @@ export const layoutStyles: Record<string, React.CSSProperties> = {
         gap: 10,
     },
 
+    mobileHeader: {
+        display: 'none',
+        position: 'sticky',
+        top: 0,
+        zIndex: 100,
+        justifyContent: 'space-between',
+        alignItems: 'center',
+        padding: '12px 16px',
+        background: 'rgba(10,12,16,0.95)',
+        backdropFilter: 'blur(20px)',
+        WebkitBackdropFilter: 'blur(20px)',
+        borderBottom: '1px solid rgba(255,255,255,0.08)',
+    },
+
     userRow: {
         display: 'grid',
         gridTemplateColumns: '36px 1fr',
@@ -144,6 +158,10 @@ export const layoutStyles: Record<string, React.CSSProperties> = {
         WebkitBackdropFilter: 'blur(10px)',
         padding: 18,
         minHeight: 'calc(100vh - 36px)',
+        maxHeight: 'calc(100vh - 36px)',
         boxShadow: '0 30px 110px rgba(0,0,0,0.55)',
+        overflow: 'auto',
+        display: 'flex',
+        flexDirection: 'column',
     },
 };

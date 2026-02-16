@@ -18,8 +18,16 @@ export function GlowCard({ children, onSuspendGlow }: GlowCardProps) {
   };
 
   return (
-    <div ref={cardRef} style={styles.card}>
+    <div ref={cardRef} style={styles.card} className="glowCard">
       <style>{keyframes}</style>
+      <style jsx global>{`
+        @media (max-width: 640px) {
+          .glowCard {
+            max-width: 100% !important;
+            border-radius: 16px !important;
+          }
+        }
+      `}</style>
 
       {/* Subtle animated background gradient/noise */}
       <div style={styles.baseBg} aria-hidden="true" />
