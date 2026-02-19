@@ -30,16 +30,22 @@ export default function DashboardHome() {
     try {
       setLoading(true);
 
+      const COMPANY_ID = process.env.NEXT_PUBLIC_COMPANY_ID!;
+      if (!COMPANY_ID) {
+        throw new Error('COMPANY_ID is not configured');
+      }
+
       const todayDateStr = ymd(new Date());
 
       const leadsA = await supabase
         .from('lead_store')
         .select('id', { count: 'exact', head: true })
+        .eq('company_id', COMPANY_ID)
         .gte('appointment_time', todayStartISO);
 
       const leadsCount =
         leadsA.error
-          ? (await supabase.from('lead_store').select('id', { count: 'exact', head: true }).eq('date', todayDateStr))
+          ? (await supabase.from('lead_store').select('id', { count: 'exact', head: true }).eq('company_id', COMPANY_ID).eq('date', todayDateStr))
             .count ?? 0
           : leadsA.count ?? 0;
 
@@ -48,14 +54,15 @@ export default function DashboardHome() {
       const active = await supabase
         .from('whatsapp_conversations')
         .select('whatsapp_user_id', { count: 'exact', head: true })
+        .eq('company_id', COMPANY_ID)
         .gte('updated_at', activeWindowStartISO);
 
       setActiveConvos(active.count ?? 0);
 
       const [hot, warm, cold] = await Promise.all([
-        supabase.from('lead_store').select('id', { count: 'exact', head: true }).eq('Lead Category', 'HOT'),
-        supabase.from('lead_store').select('id', { count: 'exact', head: true }).eq('Lead Category', 'WARM'),
-        supabase.from('lead_store').select('id', { count: 'exact', head: true }).eq('Lead Category', 'COLD'),
+        supabase.from('lead_store').select('id', { count: 'exact', head: true }).eq('company_id', COMPANY_ID).eq('Lead Category', 'HOT'),
+        supabase.from('lead_store').select('id', { count: 'exact', head: true }).eq('company_id', COMPANY_ID).eq('Lead Category', 'WARM'),
+        supabase.from('lead_store').select('id', { count: 'exact', head: true }).eq('company_id', COMPANY_ID).eq('Lead Category', 'COLD'),
       ]);
 
       setHotLeads(hot.count ?? 0);
@@ -65,6 +72,7 @@ export default function DashboardHome() {
       const msgTry1 = await supabase
         .from('Conversations')
         .select('id', { count: 'exact', head: true })
+        .eq('company_id', COMPANY_ID)
         .gte('created_at', todayStartISO)
         .eq('type', 'user');
 
@@ -74,6 +82,7 @@ export default function DashboardHome() {
         const msgFallback = await supabase
           .from('whatsapp_conversations')
           .select('whatsapp_user_id', { count: 'exact', head: true })
+          .eq('company_id', COMPANY_ID)
           .gte('updated_at', todayStartISO);
 
         setMessagesToday(msgFallback.count ?? 0);

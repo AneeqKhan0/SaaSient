@@ -38,6 +38,14 @@ export default function LoginPage() {
     setLoading(true);
     setMessage(null);
 
+    // Check if COMPANY_ID is configured
+    const COMPANY_ID = process.env.NEXT_PUBLIC_COMPANY_ID;
+    if (!COMPANY_ID) {
+      setLoading(false);
+      setMessage('Dashboard not configured. Contact support.');
+      return;
+    }
+
     // Sanitize inputs
     const sanitizedEmail = sanitizeInput(email);
 
@@ -55,7 +63,8 @@ export default function LoginPage() {
       return;
     }
 
-    const { error } = await supabase.auth.signInWithPassword({
+    // Step 1: Authenticate user
+    const { data: authData, error } = await supabase.auth.signInWithPassword({
       email: sanitizedEmail,
       password,
     });
@@ -66,9 +75,26 @@ export default function LoginPage() {
       return;
     }
 
+    // Step 2: CHECK IF USER BELONGS TO THIS COMPANY
+    const { data: membership, error: memberError } = await supabase
+      .from('company_members')
+      .select('company_id')
+      .eq('user_id', authData.user.id)
+      .eq('company_id', COMPANY_ID)
+      .single();
+
+    if (memberError || !membership) {
+      // User doesn't belong to this company - kick them out
+      await supabase.auth.signOut();
+      setLoading(false);
+      setMessage('You do not have access to this dashboard. Please check your login URL.');
+      return;
+    }
+
     // Reset rate limiter on successful login
     rateLimiter.reset(sanitizedEmail);
 
+    // Step 3: Check MFA
     const { data: aal, error: aalErr } = await supabase.auth.mfa.getAuthenticatorAssuranceLevel();
     setLoading(false);
 
@@ -82,6 +108,7 @@ export default function LoginPage() {
       return;
     }
 
+    // Step 4: Allow access to dashboard
     router.replace('/dashboard');
   }
 

@@ -30,6 +30,12 @@ export function UpcomingAppointments() {
 
   async function loadUpcomingAppointments() {
     try {
+      const COMPANY_ID = process.env.NEXT_PUBLIC_COMPANY_ID!;
+      if (!COMPANY_ID) {
+        console.error('COMPANY_ID is not configured');
+        return;
+      }
+
       const now = new Date();
       const endOfWeek = new Date(now);
       endOfWeek.setDate(now.getDate() + 7);
@@ -37,6 +43,7 @@ export function UpcomingAppointments() {
       const { data, error } = await supabase
         .from('lead_store')
         .select('id, customer_name, appointment_time, requirements, phone, email, lead_score, "Lead Category"')
+        .eq('company_id', COMPANY_ID)
         .not('appointment_time', 'is', null)
         .gte('appointment_time', now.toISOString())
         .lte('appointment_time', endOfWeek.toISOString())

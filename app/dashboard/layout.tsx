@@ -14,11 +14,31 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     (async () => {
+      const COMPANY_ID = process.env.NEXT_PUBLIC_COMPANY_ID;
+      
       const { data } = await supabase.auth.getSession();
       if (!data.session) {
         router.replace('/login');
         return;
       }
+
+      // Secondary check: Verify user belongs to this company
+      if (COMPANY_ID) {
+        const { data: membership, error: memberError } = await supabase
+          .from('company_members')
+          .select('company_id')
+          .eq('user_id', data.session.user.id)
+          .eq('company_id', COMPANY_ID)
+          .single();
+
+        if (memberError || !membership) {
+          // User doesn't belong to this company - sign them out
+          await supabase.auth.signOut();
+          router.replace('/login');
+          return;
+        }
+      }
+
       setEmail(data.session.user.email ?? null);
     })();
   }, [router]);

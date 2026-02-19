@@ -59,6 +59,15 @@ export default function AppointmentsPage() {
       setLoading(true);
       setError(null);
 
+      const COMPANY_ID = process.env.NEXT_PUBLIC_COMPANY_ID!;
+      if (!COMPANY_ID) {
+        setError('COMPANY_ID is not configured');
+        setRows([]);
+        setActive(null);
+        setLoading(false);
+        return;
+      }
+
       let startISO: Date, endISO: Date;
 
       if (viewMode === 'day') {
@@ -82,6 +91,7 @@ export default function AppointmentsPage() {
       const { data, error } = await supabase
         .from('lead_store')
         .select('id, customer_name, requirements, appointment_time, phone, email, lead_score')
+        .eq('company_id', COMPANY_ID)
         .not('appointment_time', 'is', null)
         .gte('appointment_time', startISO.toISOString())
         .lte('appointment_time', endISO.toISOString())

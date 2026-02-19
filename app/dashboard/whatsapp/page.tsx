@@ -76,9 +76,19 @@ export default function WhatsAppPage() {
       setLoadingList(true);
       setErrorList(null);
 
+      const COMPANY_ID = process.env.NEXT_PUBLIC_COMPANY_ID!;
+      if (!COMPANY_ID) {
+        setErrorList('COMPANY_ID is not configured');
+        setConvos([]);
+        setActive(null);
+        setLoadingList(false);
+        return;
+      }
+
       const { data, error } = await supabase
         .from('whatsapp_conversations')
         .select('whatsapp_user_id,name,phone_number,label,content,updated_at')
+        .eq('company_id', COMPANY_ID)
         .order('updated_at', { ascending: false })
         .limit(200);
 

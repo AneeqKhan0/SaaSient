@@ -150,7 +150,7 @@ export default function OnboardCustomerPage() {
                     label="Company Name"
                     value={formData.companyName}
                     onChange={(value) => updateField('companyName', value)}
-                    placeholder="Acme Corporation"
+                    placeholder="SaaSient"
                     required
                   />
                   <Select

@@ -60,9 +60,19 @@ export default function LeadsPage() {
       setLoading(true);
       setError(null);
 
+      const COMPANY_ID = process.env.NEXT_PUBLIC_COMPANY_ID!;
+      if (!COMPANY_ID) {
+        setError('COMPANY_ID is not configured');
+        setRows([]);
+        setActiveId(null);
+        setLoading(false);
+        return;
+      }
+
       const { data, error } = await supabase
         .from('lead_store')
         .select('*')
+        .eq('company_id', COMPANY_ID)
         .eq('Source', sourceValue)
         .limit(1000);
 
