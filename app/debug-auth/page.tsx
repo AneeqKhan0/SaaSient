@@ -66,8 +66,8 @@ export default function DebugAuthPage() {
           userCompanies: userCompanies,
           timestamp: new Date().toISOString()
         });
-      } catch (error) {
-        setDebugInfo({ error: error.message });
+      } catch (error: any) {
+        setDebugInfo({ error: error?.message || 'Unknown error' });
       } finally {
         setLoading(false);
       }
