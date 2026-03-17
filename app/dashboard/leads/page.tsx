@@ -30,8 +30,10 @@ const WHATSAPP_COLUMNS: string[] = [
   'Lead Category',
 ];
 
+const FONT_SIZES = [11, 13, 15, 17] as const;
+
 const TAB_TO_SOURCE: Record<Tab, string> = {
-  whatsapp: 'WhatsApp Agent',
+  whatsapp: 'WhatsApp agent',  // Changed from 'WhatsApp Agent' to match database
   voice: 'Voice Agent',
 };
 
@@ -43,9 +45,23 @@ export default function LeadsPage() {
   const [downloading, setDownloading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [search, setSearch] = useState('');
+  const [fontSizeIdx, setFontSizeIdx] = useState(1); // default 13px
+  const [isMobile, setIsMobile] = useState(false);
 
   const { formatTime } = useFormatters();
   const sourceValue = useMemo(() => TAB_TO_SOURCE[tab], [tab]);
+  const currentFontSize = FONT_SIZES[fontSizeIdx];
+
+  // Mobile detection
+  useEffect(() => {
+    const checkMobile = () => {
+      setIsMobile(window.innerWidth <= 980);
+    };
+    
+    checkMobile();
+    window.addEventListener('resize', checkMobile);
+    return () => window.removeEventListener('resize', checkMobile);
+  }, []);
 
   const columnsToRender = useMemo(() => {
     if (tab === 'whatsapp') return WHATSAPP_COLUMNS;
@@ -69,14 +85,33 @@ export default function LeadsPage() {
         return;
       }
 
+      console.log('Fetching leads with:', { COMPANY_ID, sourceValue });
+
+      // First, let's check what Source values actually exist
+      const { data: allData, error: allError } = await supabase
+        .from('lead_store')
+        .select('Source, customer_name, id')
+        .eq('company_id', COMPANY_ID)
+        .limit(20);
+
+      console.log('All leads with Sources:', allData, 'Error:', allError);
+      
+      // Get unique source values
+      const uniqueSources = [...new Set(allData?.map(item => item.Source) || [])];
+      console.log('Unique Source values found:', uniqueSources);
+
+      // TEMPORARY: Show all leads regardless of source for debugging
       const { data, error } = await supabase
         .from('lead_store')
         .select('*')
         .eq('company_id', COMPANY_ID)
-        .eq('Source', sourceValue)
+        .eq('Source', sourceValue)  // Re-enabled source filtering
         .limit(1000);
 
+      console.log('Filtered leads for source:', sourceValue, 'Data:', data, 'Error:', error);
+
       if (error) {
+        console.error('Supabase error:', error);
         setError(error.message);
         setRows([]);
         setActiveId(null);
@@ -85,6 +120,7 @@ export default function LeadsPage() {
       }
 
       const fetched = (data || []) as any[];
+      console.log('Fetched leads:', fetched.length, 'leads');
       fetched.sort((a: any, b: any) => {
         const aKey = a.appointment_time ?? a.date ?? a.id ?? '';
         const bKey = b.appointment_time ?? b.date ?? b.id ?? '';
@@ -98,8 +134,18 @@ export default function LeadsPage() {
 
       setRows(fetched);
       setLoading(false);
-      if (fetched.length > 0) setActiveId(getItemId(fetched[0]));
-      else setActiveId(null);
+      // Only auto-select first item on desktop, not on mobile
+      if (fetched.length > 0) {
+        // Use window.innerWidth directly to avoid dependency on isMobile state
+        const isCurrentlyMobile = window.innerWidth <= 980;
+        if (!isCurrentlyMobile) {
+          setActiveId(getItemId(fetched[0]));
+        } else {
+          setActiveId(null);
+        }
+      } else {
+        setActiveId(null);
+      }
     })();
   }, [sourceValue]);
 
@@ -124,12 +170,15 @@ export default function LeadsPage() {
     });
   }, [rows, search]);
 
-  // Auto-select first item when search changes
+  // Auto-select first item when search changes (desktop only)
   useEffect(() => {
-    if (!activeId || !filteredRows.some((r) => getItemId(r) === activeId)) {
+    if (!isMobile && (!activeId || !filteredRows.some((r) => getItemId(r) === activeId))) {
       setActiveId(filteredRows[0] ? getItemId(filteredRows[0]) : null);
+    } else if (isMobile && activeId && !filteredRows.some((r) => getItemId(r) === activeId)) {
+      // On mobile, only clear activeId if current selection is not in filtered results
+      setActiveId(null);
     }
-  }, [search, tab, filteredRows.length, activeId]);
+  }, [search, tab, filteredRows.length, activeId, isMobile]);
 
   function getItemId(item: any): string {
     return String(item?.id ?? item?.phone ?? item?.email ?? '0');
@@ -220,6 +269,11 @@ export default function LeadsPage() {
       onActiveChange={setActiveId}
       getItemId={getItemId}
       emptyMessage="No leads found."
+      fontSize={currentFontSize}
+      onFontSizeDecrease={() => setFontSizeIdx((i) => Math.max(0, i - 1))}
+      onFontSizeIncrease={() => setFontSizeIdx((i) => Math.min(FONT_SIZES.length - 1, i + 1))}
+      canDecrease={fontSizeIdx > 0}
+      canIncrease={fontSizeIdx < FONT_SIZES.length - 1}
       note={
         tab === 'whatsapp'
           ? 'WhatsApp tab is restricted to the exact columns you requested.'
@@ -240,7 +294,7 @@ export default function LeadsPage() {
           title={getNiceTitle(item)}
           subtitle={`${getBadgeText(item)} • Score: ${getScoreText(item)}`}
         >
-          <KeyValueGrid data={item} columns={columnsToRender} />
+          <KeyValueGrid data={item} columns={columnsToRender} fontSize={currentFontSize} />
         </DetailPanel>
       )}
     />

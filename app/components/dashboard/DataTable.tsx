@@ -23,6 +23,12 @@ type DataTableProps = {
   getItemId: (item: any) => string;
   emptyMessage?: string;
   note?: string;
+  // Font size controls
+  fontSize?: number;
+  onFontSizeDecrease?: () => void;
+  onFontSizeIncrease?: () => void;
+  canDecrease?: boolean;
+  canIncrease?: boolean;
 };
 
 export function DataTable({
@@ -43,9 +49,15 @@ export function DataTable({
   getItemId,
   emptyMessage = 'No items found.',
   note,
+  fontSize,
+  onFontSizeDecrease,
+  onFontSizeIncrease,
+  canDecrease,
+  canIncrease,
 }: DataTableProps) {
   const [showDetail, setShowDetail] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
+  const [showMobileSearch, setShowMobileSearch] = useState(false);
 
   useEffect(() => {
     const checkMobile = () => {
@@ -83,34 +95,88 @@ export function DataTable({
   return (
     <div style={styles.shell} className="dataTableShell">
       <style jsx global>{`
+        @keyframes slideDown {
+          from {
+            opacity: 0;
+            transform: translateY(-10px);
+          }
+          to {
+            opacity: 1;
+            transform: translateY(0);
+          }
+        }
+        
         @media (max-width: 980px) {
           .dataTableShell {
-            height: 100% !important;
+            height: 100vh !important;
+            max-height: 100vh !important;
           }
           .dataTableSplit {
             grid-template-columns: 1fr !important;
+            height: 100% !important;
           }
           .dataTableLeft {
             display: ${showDetail ? 'none' : 'grid'} !important;
-            max-height: none !important;
-            height: 100% !important;
+            max-height: ${showMobileSearch ? 'calc(100vh - 130px)' : 'calc(100vh - 80px)'} !important;
+            height: ${showMobileSearch ? 'calc(100vh - 130px)' : 'calc(100vh - 80px)'} !important;
+            overflow: auto !important;
             border-right: none !important;
             border-bottom: 1px solid rgba(255,255,255,0.10) !important;
           }
           .dataTableRight {
             display: ${showDetail ? 'flex' : 'none'} !important;
-            height: 100% !important;
+            height: 100vh !important;
+            max-height: 100vh !important;
+            overflow: hidden !important;
           }
           .dataTableHeader {
-            flex-direction: column !important;
-            align-items: flex-start !important;
+            flex-direction: row !important;
+            align-items: center !important;
+            flex: 0 0 auto !important;
+            gap: 10px !important;
+            padding: 10px 14px !important;
+            min-height: 64px !important;
+            background: rgba(0,0,0,0.15) !important;
+            border-bottom: 1px solid rgba(255,255,255,0.08) !important;
           }
           .dataTableHeaderRight {
-            width: 100%;
-            justify-content: flex-start !important;
+            width: auto !important;
+            justify-content: flex-end !important;
+            flex: 1 1 auto !important;
+            gap: 10px !important;
           }
           .dataTableMobileHeader {
             display: flex !important;
+            flex: 0 0 auto !important;
+          }
+          .dataTableContent {
+            flex: 1 1 auto !important;
+            min-height: 0 !important;
+            overflow: hidden !important;
+          }
+          .dataTableTitle {
+            display: none !important;
+          }
+          .dataTableSubtitle {
+            display: none !important;
+          }
+          .dataTableSearchRow {
+            display: none !important;
+          }
+          .dataTableFontControls {
+            display: none !important;
+          }
+          .dataTableMobileSearch {
+            display: block !important;
+          }
+          .dataTableSegment {
+            flex: 0 0 auto !important;
+          }
+          .dataTableSegment button {
+            font-size: 13px !important;
+            padding: 0 12px !important;
+            height: 36px !important;
+            font-weight: 700 !important;
           }
         }
         @media (min-width: 981px) {
@@ -121,9 +187,13 @@ export function DataTable({
         @media (max-width: 640px) {
           .dataTableShell {
             gap: 8px !important;
+            height: 100vh !important;
+            padding: 8px !important;
           }
           .dataTableContent {
             border-radius: 12px !important;
+            flex: 1 1 auto !important;
+            min-height: 0 !important;
           }
           .dataTableSegment {
             width: 100%;
@@ -140,13 +210,21 @@ export function DataTable({
             width: 100%;
             justify-content: center !important;
           }
+          .dataTableLeft {
+            max-height: calc(100vh - 240px) !important;
+            height: calc(100vh - 240px) !important;
+          }
+          .dataTableRight {
+            height: calc(100vh - 16px) !important;
+            max-height: calc(100vh - 16px) !important;
+          }
         }
       `}</style>
       {/* Header */}
       <div style={styles.header} className="dataTableHeader">
         <div style={{ minWidth: 0 }}>
-          <div style={styles.h1}>{title}</div>
-          {subtitle && <div style={styles.sub}>{subtitle}</div>}
+          <div style={styles.h1} className="dataTableTitle">{title}</div>
+          {subtitle && <div style={styles.sub} className="dataTableSubtitle">{subtitle}</div>}
         </div>
 
         <div style={styles.headerRight} className="dataTableHeaderRight">
@@ -160,7 +238,52 @@ export function DataTable({
             </div>
           )}
 
-          {onDownload && (
+          {/* Mobile search icon */}
+          {isMobile && !showDetail && (
+            <div style={styles.mobileSearchIcon} className="dataTableMobileSearch">
+              <button
+                onClick={() => setShowMobileSearch(!showMobileSearch)}
+                style={{
+                  ...styles.searchIconBtn,
+                  ...(showMobileSearch ? styles.searchIconBtnActive : {}),
+                }}
+                title="Search"
+              >
+                🔍
+              </button>
+            </div>
+          )}
+
+          {/* Font size controls */}
+          {fontSize && onFontSizeDecrease && onFontSizeIncrease && (
+            <div style={styles.fontControls} className="dataTableFontControls">
+              <button
+                onClick={onFontSizeDecrease}
+                disabled={!canDecrease}
+                style={{
+                  ...styles.fontBtn,
+                  opacity: !canDecrease ? 0.3 : 1,
+                }}
+                title="Decrease font size"
+              >
+                A−
+              </button>
+              <span style={styles.fontLabel}>{fontSize}px</span>
+              <button
+                onClick={onFontSizeIncrease}
+                disabled={!canIncrease}
+                style={{
+                  ...styles.fontBtn,
+                  opacity: !canIncrease ? 0.3 : 1,
+                }}
+                title="Increase font size"
+              >
+                A+
+              </button>
+            </div>
+          )}
+
+          {onDownload && !showDetail && (
             <Button
               onClick={onDownload}
               disabled={loading || downloading || data.length === 0}
@@ -171,6 +294,23 @@ export function DataTable({
           )}
         </div>
       </div>
+
+      {/* Mobile Search */}
+      {isMobile && showMobileSearch && (
+        <div style={styles.mobileSearchRow} className="dataTableMobileSearchRow">
+          <SearchInput
+            value={searchValue}
+            onChange={onSearchChange}
+            placeholder="Search..."
+          />
+          <button
+            onClick={() => setShowMobileSearch(false)}
+            style={styles.closeMobileSearch}
+          >
+            ✕
+          </button>
+        </div>
+      )}
 
       {/* Search */}
       <div style={styles.searchRow} className="dataTableSearchRow">
@@ -260,6 +400,7 @@ function segBtn(active: boolean) {
 const styles = {
   shell: {
     height: '100%',
+    maxHeight: '100%',
     overflow: 'hidden',
     display: 'flex',
     flexDirection: 'column' as const,
@@ -347,14 +488,19 @@ const styles = {
     padding: spacing.sm,
     overflow: 'auto',
     minHeight: 0,
+    maxHeight: '100%',
     display: 'grid',
     gap: 10,
+    gridAutoRows: 'max-content',
+    alignContent: 'start',
     background: 'rgba(0,0,0,0.14)',
   },
   right: {
     display: 'flex',
     flexDirection: 'column' as const,
     minHeight: 0,
+    maxHeight: '100%',
+    overflow: 'hidden',
   },
   muted: { color: colors.text.secondary, padding: spacing.sm },
   emptyState: { 
@@ -405,4 +551,88 @@ const styles = {
     whiteSpace: 'nowrap' as const,
   },
   note: { color: colors.text.tertiary, fontSize: 12 },
+  // Font size controls
+  fontControls: {
+    display: 'flex',
+    alignItems: 'center',
+    gap: 8,
+    padding: '6px 10px',
+    borderRadius: 8,
+    border: '1px solid rgba(255,255,255,0.10)',
+    background: 'rgba(0,0,0,0.20)',
+  },
+  fontBtn: {
+    width: 28,
+    height: 28,
+    borderRadius: 6,
+    border: '1px solid rgba(255,255,255,0.12)',
+    background: 'rgba(255,255,255,0.06)',
+    color: 'rgba(255,255,255,0.85)',
+    fontSize: 12,
+    fontWeight: 700,
+    cursor: 'pointer',
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    transition: 'all 120ms ease',
+  },
+  fontLabel: {
+    fontSize: 12,
+    fontWeight: 600,
+    color: 'rgba(255,255,255,0.75)',
+    minWidth: 28,
+    textAlign: 'center' as const,
+  },
+  // Mobile search icon
+  mobileSearchIcon: {
+    display: 'none',
+  },
+  searchIconBtn: {
+    width: 38,
+    height: 38,
+    borderRadius: 10,
+    border: '1px solid rgba(255,255,255,0.15)',
+    background: 'rgba(255,255,255,0.08)',
+    color: 'rgba(255,255,255,0.90)',
+    fontSize: 16,
+    cursor: 'pointer',
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    transition: 'all 150ms ease',
+    boxShadow: '0 2px 8px rgba(0,0,0,0.15)',
+  },
+  searchIconBtnActive: {
+    background: 'rgba(0,153,249,0.15)',
+    border: '1px solid rgba(0,153,249,0.35)',
+    color: 'rgba(0,153,249,0.95)',
+    boxShadow: '0 0 0 2px rgba(0,153,249,0.20), 0 4px 12px rgba(0,0,0,0.25)',
+  },
+  // Mobile search row
+  mobileSearchRow: {
+    display: 'flex',
+    alignItems: 'center',
+    gap: 10,
+    padding: '8px 12px',
+    flex: '0 0 auto',
+    background: 'rgba(0,0,0,0.20)',
+    borderTop: '1px solid rgba(255,255,255,0.08)',
+    animation: 'slideDown 200ms ease',
+  },
+  closeMobileSearch: {
+    width: 34,
+    height: 34,
+    borderRadius: 8,
+    border: '1px solid rgba(255,255,255,0.15)',
+    background: 'rgba(255,255,255,0.08)',
+    color: 'rgba(255,255,255,0.85)',
+    fontSize: 12,
+    fontWeight: 'bold',
+    cursor: 'pointer',
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    flex: '0 0 auto',
+    transition: 'all 150ms ease',
+  },
 };

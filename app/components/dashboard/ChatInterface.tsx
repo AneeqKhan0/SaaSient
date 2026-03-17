@@ -74,38 +74,114 @@ export function ChatInterface({
         @media (max-width: 980px) {
           .chatShell {
             grid-template-columns: 1fr !important;
-            height: 100% !important;
+            height: 100vh !important;
+            max-height: 100vh !important;
           }
           .chatLeft {
             display: ${showChat ? 'none' : 'flex'} !important;
-            height: 100% !important;
+            height: 100vh !important;
+            max-height: 100vh !important;
+            overflow: hidden !important;
           }
           .chatRight {
             display: ${showChat ? 'flex' : 'none'} !important;
-            height: 100% !important;
+            height: 100vh !important;
+            max-height: 100vh !important;
+            overflow: hidden !important;
           }
           .chatMobileHeader {
             display: flex !important;
             align-items: flex-start !important;
+            flex: 0 0 auto !important;
           }
           .chatHeaderDesktop {
             display: none !important;
+          }
+          .chatRight .chatBody {
+            overflow-y: auto !important;
+            -webkit-overflow-scrolling: touch !important;
+            max-height: calc(100vh - 140px) !important;
+            height: calc(100vh - 140px) !important;
+          }
+          .chatLeft .list {
+            overflow-y: auto !important;
+            -webkit-overflow-scrolling: touch !important;
+            max-height: calc(100vh - 160px) !important;
           }
         }
         @media (min-width: 981px) {
           .chatMobileHeader {
             display: none !important;
           }
+          .chatRight .chatBody {
+            overflow-y: auto !important;
+            max-height: calc(100vh - 250px) !important;
+          }
         }
         @media (max-width: 640px) {
           .chatShell {
             gap: 8px !important;
+            height: 100vh !important;
+            padding: 8px !important;
           }
           .chatLeft {
             border-radius: 12px !important;
+            height: calc(100vh - 16px) !important;
           }
           .chatRight {
             border-radius: 12px !important;
+            height: calc(100vh - 16px) !important;
+          }
+          .chatRight .chatBody {
+            max-height: calc(100vh - 180px) !important;
+            height: calc(100vh - 180px) !important;
+          }
+          .chatLeft .list {
+            max-height: calc(100vh - 200px) !important;
+          }
+        }
+        
+        /* Hover effects for conversation items */
+        .chatLeft .conversation-item:hover {
+          background: rgba(255,255,255,0.04) !important;
+          border-color: rgba(255,255,255,0.15) !important;
+        }
+        
+        /* Smooth scrolling */
+        .chatLeft, .chatRight {
+          scroll-behavior: smooth;
+        }
+        
+        /* Ensure chat body scrolls */
+        .chatRight {
+          overflow: hidden !important;
+        }
+        .chatRight > div:last-child {
+          overflow-y: auto !important;
+          overflow-x: hidden !important;
+          max-height: calc(100vh - 200px) !important;
+        }
+        
+        /* Desktop specific scrolling */
+        @media (min-width: 981px) {
+          .chatRight .chatBody {
+            overflow-y: auto !important;
+            max-height: calc(100vh - 250px) !important;
+          }
+        }
+        
+        /* Mobile touch scrolling improvements */
+        @media (max-width: 980px) {
+          .chatBody, .list {
+            -webkit-overflow-scrolling: touch !important;
+            overflow-scrolling: touch !important;
+          }
+          
+          /* Prevent body scroll when scrolling chat */
+          body.chat-open {
+            overflow: hidden !important;
+            position: fixed !important;
+            width: 100% !important;
           }
         }
       `}</style>
@@ -138,7 +214,7 @@ export function ChatInterface({
           </div>
         )}
 
-        <div style={styles.list}>
+        <div style={styles.list} className="list">
           {loading ? (
             <div style={styles.muted}>Loading conversations…</div>
           ) : conversations.length === 0 ? (
@@ -152,6 +228,7 @@ export function ChatInterface({
                 <div
                   key={id}
                   onClick={() => handleConversationSelect(conversation)}
+                  className="conversation-item"
                   style={{
                     ...styles.item,
                     ...(isActive ? styles.itemActive : {}),
@@ -198,7 +275,7 @@ export function ChatInterface({
             <div style={styles.chatHeader} className={isMobile ? 'chatHeaderDesktop' : ''}>
               {renderChatHeader(activeConversation)}
             </div>
-            <div style={styles.chatBody}>
+            <div style={styles.chatBody} className="chatBody">
               {renderMessages(activeConversation)}
             </div>
           </>
@@ -240,6 +317,7 @@ const styles = {
     display: 'flex',
     flexDirection: 'column' as const,
     minHeight: 0,
+    maxHeight: '100%',
   },
   leftHeader: {
     padding: spacing.md,
@@ -285,10 +363,12 @@ const styles = {
   },
   list: {
     padding: spacing.sm,
-    display: 'grid',
-    gap: 10,
+    display: 'flex',
+    flexDirection: 'column' as const,
+    gap: 8,
     overflow: 'auto',
     minHeight: 0,
+    maxHeight: '100%',
     flex: '1 1 auto',
   },
   muted: { color: colors.text.tertiary, padding: spacing.sm },
@@ -299,9 +379,13 @@ const styles = {
     background: 'rgba(0,0,0,0.20)',
     color: colors.text.primary,
     cursor: 'pointer',
+    transition: 'all 150ms ease',
+    flex: '0 0 auto',
+    minHeight: 'auto',
   },
   itemActive: {
     border: `1px solid ${colors.card.borderAccent}`,
+    background: 'rgba(0,153,249,0.08)',
     boxShadow: '0 0 0 1px rgba(0,153,249,0.18), 0 14px 45px rgba(0,0,0,0.35)',
   },
   emptyState: { 
@@ -396,6 +480,11 @@ const styles = {
     background: 'rgba(0,0,0,0.18)',
     flex: '1 1 auto',
     minHeight: 0,
+    maxHeight: 'calc(100vh - 280px)', // Specific height for desktop
     WebkitOverflowScrolling: 'touch' as const,
+    scrollBehavior: 'smooth' as const,
+    overflowY: 'auto' as const,
+    overflowX: 'hidden' as const,
+    position: 'relative' as const,
   },
 };

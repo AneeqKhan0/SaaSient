@@ -424,5 +424,7 @@ const styles: Record<string, CSSProperties> = {
     display: 'flex',
     flexDirection: 'column',
     gap: 0,
+    minHeight: 'min-content',
+    width: '100%',
   },
 };

@@ -160,7 +160,7 @@ export const layoutStyles: Record<string, React.CSSProperties> = {
         minHeight: 'calc(100vh - 36px)',
         maxHeight: 'calc(100vh - 36px)',
         boxShadow: '0 30px 110px rgba(0,0,0,0.55)',
-        overflow: 'auto',
+        overflow: 'hidden', // Changed from 'auto' to 'hidden'
         display: 'flex',
         flexDirection: 'column',
     },

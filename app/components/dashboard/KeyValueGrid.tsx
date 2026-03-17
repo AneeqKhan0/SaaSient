@@ -3,21 +3,22 @@ import { colors, borderRadius, spacing } from '../shared/constants';
 type KeyValueGridProps = {
   data: Record<string, any>;
   columns?: string[];
+  fontSize?: number;
 };
 
-export function KeyValueGrid({ data, columns }: KeyValueGridProps) {
+export function KeyValueGrid({ data, columns, fontSize = 13 }: KeyValueGridProps) {
   const keysToShow = columns || Object.keys(data);
 
   return (
     <div style={styles.grid}>
       {keysToShow.map((key) => (
-        <KeyValueItem key={key} label={key} value={data[key]} />
+        <KeyValueItem key={key} label={key} value={data[key]} fontSize={fontSize} />
       ))}
     </div>
   );
 }
 
-function KeyValueItem({ label, value }: { label: string; value: any }) {
+function KeyValueItem({ label, value, fontSize = 13 }: { label: string; value: any; fontSize?: number }) {
   const str = formatValue(value);
   const isLong = str.length > 140;
 
@@ -27,6 +28,7 @@ function KeyValueItem({ label, value }: { label: string; value: any }) {
       <div
         style={{
           ...styles.value,
+          fontSize: fontSize,
           ...(isLong ? styles.valueLong : {}),
         }}
         title={isLong ? str : undefined}
@@ -63,7 +65,7 @@ const styles = {
   },
   value: {
     marginTop: spacing.xs,
-    fontSize: 13,
+    fontSize: 13, // Default, will be overridden by prop
     color: colors.text.primary,
     lineHeight: 1.5,
     wordBreak: 'break-word' as const,

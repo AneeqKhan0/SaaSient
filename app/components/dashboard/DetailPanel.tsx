@@ -9,7 +9,24 @@ type DetailPanelProps = {
 
 export function DetailPanel({ title, subtitle, children }: DetailPanelProps) {
   return (
-    <>
+    <div style={styles.container}>
+      <style jsx>{`
+        @media (max-width: 980px) {
+          .detail-panel-container {
+            height: 100vh !important;
+            max-height: 100vh !important;
+          }
+          .detail-panel-body {
+            max-height: calc(100vh - 120px) !important;
+            -webkit-overflow-scrolling: touch !important;
+          }
+        }
+        @media (max-width: 640px) {
+          .detail-panel-body {
+            max-height: calc(100vh - 140px) !important;
+          }
+        }
+      `}</style>
       <div style={styles.header}>
         <div style={{ minWidth: 0 }}>
           <div style={styles.title}>{title}</div>
@@ -17,12 +34,19 @@ export function DetailPanel({ title, subtitle, children }: DetailPanelProps) {
         </div>
       </div>
 
-      <div style={styles.body}>{children}</div>
-    </>
+      <div style={styles.body} className="detail-panel-body">{children}</div>
+    </div>
   );
 }
 
 const styles = {
+  container: {
+    display: 'flex',
+    flexDirection: 'column' as const,
+    height: '100%',
+    minHeight: 0,
+    maxHeight: '100%',
+  },
   header: {
     padding: spacing.md,
     borderBottom: `1px solid ${colors.card.border}`,
@@ -44,5 +68,7 @@ const styles = {
     overflow: 'auto',
     minHeight: 0,
     flex: '1 1 auto',
+    maxHeight: '65vh', // Use viewport height instead of fixed pixels
+    WebkitOverflowScrolling: 'touch' as const,
   },
 };
