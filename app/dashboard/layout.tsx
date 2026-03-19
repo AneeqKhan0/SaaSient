@@ -58,7 +58,7 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
 
       <div style={styles.mobileHeader} className="dashMobileHeader">
         <img 
-          src="/saasient-logo.png" 
+          src="/SAASIENT-LOGO.png" 
           alt="SaaSient Logo" 
           style={styles.mobileLogo}
         />
@@ -68,7 +68,7 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
       <aside style={styles.sidebar} className="dashSidebar">
         <div style={styles.brand}>
           <img 
-            src="/saasient-logo.png" 
+            src="/SAASIENT-LOGO.png" 
             alt="SaaSient Logo" 
             style={styles.logo}
           />

@@ -70,7 +70,7 @@ export function MobileMenu({ email, onSignOut }: MobileMenuProps) {
       <div style={{ ...styles.menu, ...(isOpen ? styles.menuOpen : {}) }} className="mobileMenuContainer">
         <div style={styles.menuHeader}>
           <img 
-            src="/saasient-logo.png" 
+            src="/SAASIENT-LOGO.png" 
             alt="SaaSient Logo" 
             style={styles.menuLogo}
           />
