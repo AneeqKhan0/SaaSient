@@ -27,6 +27,8 @@ export { ChatMessage } from './dashboard/ChatMessage';
 export { CalendarView } from './dashboard/CalendarView';
 export { AppointmentCard } from './dashboard/AppointmentCard';
 export { AppointmentModal } from './dashboard/AppointmentModal';
+export { UsageStats } from './dashboard/UsageStats';
+export { LimitReachedModal } from './dashboard/LimitReachedModal';
 export { MonthView } from './dashboard/appointments/MonthView';
 export { WeekView } from './dashboard/appointments/WeekView';
 export { DayView } from './dashboard/appointments/DayView';

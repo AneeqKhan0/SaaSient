@@ -14,6 +14,7 @@ type FormData = {
   password: string;
   plan: string;
   phone: string;
+  maxLeads: string;
 };
 
 type SuccessData = {
@@ -40,6 +41,7 @@ export default function OnboardCustomerPage() {
     password: '',
     plan: 'starter',
     phone: '',
+    maxLeads: '',
   });
 
   const updateField = (field: keyof FormData, value: string) => {
@@ -62,6 +64,13 @@ export default function OnboardCustomerPage() {
     }
     if (formData.password.length < 8) {
       return 'Password must be at least 8 characters';
+    }
+    if (!formData.maxLeads.trim()) {
+      return 'Max leads is required';
+    }
+    const maxLeadsNum = parseInt(formData.maxLeads);
+    if (isNaN(maxLeadsNum) || maxLeadsNum < 1) {
+      return 'Max leads must be a valid number greater than 0';
     }
     return null;
   };
@@ -107,6 +116,7 @@ export default function OnboardCustomerPage() {
         password: '',
         plan: 'starter',
         phone: '',
+        maxLeads: '',
       });
 
     } catch (err: any) {
@@ -184,6 +194,17 @@ export default function OnboardCustomerPage() {
                     placeholder="+1 (555) 123-4567"
                   />
                 </div>
+
+                {/* Max Leads Row */}
+                <Input
+                  id="maxLeads"
+                  type="number"
+                  label="Max Leads"
+                  value={formData.maxLeads}
+                  onChange={(value) => updateField('maxLeads', value)}
+                  placeholder="Enter max leads limit"
+                  required
+                />
 
                 {/* Password */}
                 <PasswordInput

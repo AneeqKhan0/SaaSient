@@ -11,6 +11,7 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
   const router = useRouter();
   const pathname = usePathname();
   const [email, setEmail] = useState<string | null>(null);
+  const [userRole, setUserRole] = useState<string | null>(null);
 
   useEffect(() => {
     (async () => {
@@ -22,11 +23,11 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
         return;
       }
 
-      // Secondary check: Verify user belongs to this company
+      // Secondary check: Verify user belongs to this company and get role
       if (COMPANY_ID) {
         const { data: membership, error: memberError } = await supabase
           .from('company_members')
-          .select('company_id')
+          .select('company_id, role')
           .eq('user_id', data.session.user.id)
           .eq('company_id', COMPANY_ID)
           .single();
@@ -37,6 +38,8 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
           router.replace('/login');
           return;
         }
+
+        setUserRole(membership.role);
       }
 
       setEmail(data.session.user.email ?? null);
@@ -54,27 +57,21 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
       <div style={styles.noise} aria-hidden="true" />
 
       <div style={styles.mobileHeader} className="dashMobileHeader">
-        <div style={styles.brand}>
-          <div style={styles.logoWrap} aria-hidden="true">
-            <div style={styles.logoInner}>S</div>
-          </div>
-          <div style={{ lineHeight: 1.05 }}>
-            <div style={styles.brandTitle}>SaaSient</div>
-            <div style={styles.brandSub}>Dashboard</div>
-          </div>
-        </div>
+        <img 
+          src="/saasient-logo.png" 
+          alt="SaaSient Logo" 
+          style={styles.mobileLogo}
+        />
         <MobileMenu email={email} onSignOut={signOut} />
       </div>
 
       <aside style={styles.sidebar} className="dashSidebar">
         <div style={styles.brand}>
-          <div style={styles.logoWrap} aria-hidden="true">
-            <div style={styles.logoInner}>S</div>
-          </div>
-          <div style={{ lineHeight: 1.05 }}>
-            <div style={styles.brandTitle}>SaaSient</div>
-            <div style={styles.brandSub}>Dashboard</div>
-          </div>
+          <img 
+            src="/saasient-logo.png" 
+            alt="SaaSient Logo" 
+            style={styles.logo}
+          />
         </div>
 
         <nav style={styles.nav} className="dashNav">
@@ -94,14 +91,23 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
             label="Appointments"
             active={pathname.startsWith('/dashboard/appointments')}
           />
+          <NavItem
+            href="/dashboard/usage"
+            label="Plan Usage"
+            active={pathname.startsWith('/dashboard/usage')}
+          />
         </nav>
 
         <div style={styles.sidebarFooter} className="dashFooter">
+          <NavItem
+            href="/dashboard/settings"
+            label="⚙️ Settings"
+            active={pathname.startsWith('/dashboard/settings')}
+          />
           <div style={styles.userRow}>
             <div style={styles.avatar}>{(email?.[0] ?? 'U').toUpperCase()}</div>
             <div style={{ overflow: 'hidden' }}>
               <div style={styles.userEmail}>{email ?? '...'}</div>
-              <div style={styles.userRole}>Admin</div>
             </div>
           </div>
           <button onClick={signOut} style={styles.signOut}>

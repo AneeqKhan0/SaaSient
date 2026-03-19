@@ -7,6 +7,7 @@ type OnboardRequest = {
   password: string;
   plan: string;
   phone?: string;
+  maxLeads: string;
 };
 
 function generateSlug(name: string): string {
@@ -22,10 +23,10 @@ function generateSlug(name: string): string {
 export async function POST(request: NextRequest) {
   try {
     const body: OnboardRequest = await request.json();
-    const { companyName, email, password, plan, phone } = body;
+    const { companyName, email, password, plan, phone, maxLeads } = body;
 
     // Validate required fields
-    if (!companyName || !email || !password || !plan) {
+    if (!companyName || !email || !password || !plan || !maxLeads) {
       return NextResponse.json(
         { error: 'Missing required fields' },
         { status: 400 }
@@ -45,6 +46,15 @@ export async function POST(request: NextRequest) {
     if (!emailRegex.test(email)) {
       return NextResponse.json(
         { error: 'Invalid email format' },
+        { status: 400 }
+      );
+    }
+
+    // Validate max leads
+    const maxLeadsNum = parseInt(maxLeads);
+    if (isNaN(maxLeadsNum) || maxLeadsNum < 1) {
+      return NextResponse.json(
+        { error: 'Max leads must be a valid number greater than 0' },
         { status: 400 }
       );
     }
@@ -92,6 +102,7 @@ export async function POST(request: NextRequest) {
         name: companyName,
         slug,
         plan,
+        max_leads: maxLeadsNum,
       })
       .select('id')
       .single();

@@ -5,6 +5,8 @@ import { supabase } from '@/lib/supabaseClient';
 import { StatCard } from '@/app/components/dashboard/StatCard';
 import { ActionCard } from '@/app/components/dashboard/ActionCard';
 import { UpcomingAppointments } from '@/app/components/dashboard/UpcomingAppointments';
+import { UsageStats } from '@/app/components/dashboard/UsageStats';
+import { LimitReachedModal } from '@/app/components/dashboard/LimitReachedModal';
 import { useFormatters } from '@/app/components/shared/hooks';
 import { toISOStartOfDay, addDays, ymd } from '@/app/components/shared/utils';
 import { homeStyles as styles } from '@/app/components/dashboard/styles/dashboardHome';
@@ -12,6 +14,7 @@ import { homeStyles as styles } from '@/app/components/dashboard/styles/dashboar
 export default function DashboardHome() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [showLimitModal, setShowLimitModal] = useState(false);
   const { formatNum } = useFormatters();
 
   const [leadsToday, setLeadsToday] = useState(0);
@@ -23,6 +26,13 @@ export default function DashboardHome() {
 
   const todayStartISO = useMemo(() => toISOStartOfDay(new Date()), []);
   const activeWindowStartISO = useMemo(() => toISOStartOfDay(addDays(new Date(), -1)), []);
+
+  const handleLimitReached = () => {
+    // Show popup after 5 seconds
+    setTimeout(() => {
+      setShowLimitModal(true);
+    }, 5000);
+  };
 
   async function loadMetrics() {
     setError(null);
@@ -158,6 +168,10 @@ export default function DashboardHome() {
         <StatCard icon="❄️" title="COLD leads" value={loading ? '—' : formatNum(coldLeads)} subtitle="Lead Category" />
       </div>
 
+      <div style={styles.usageSection}>
+        <UsageStats onLimitReached={handleLimitReached} />
+      </div>
+
       <div style={styles.upcomingSection}>
         <UpcomingAppointments />
       </div>
@@ -166,7 +180,13 @@ export default function DashboardHome() {
         <ActionCard href="/dashboard/leads" title="Qualified Leads" description="View WhatsApp Agent &amp; Voice Agent leads." />
         <ActionCard href="/dashboard/whatsapp" title="WhatsApp Conversations" description="Read-only WhatsApp-style threads." />
         <ActionCard href="/dashboard/appointments" title="Appointments" description="View scheduled appointments calendar." />
+        <ActionCard href="/dashboard/usage" title="Plan Usage Details" description="Comprehensive usage analytics and limits." />
       </div>
+
+      <LimitReachedModal 
+        isOpen={showLimitModal} 
+        onClose={() => setShowLimitModal(false)} 
+      />
 
       <style jsx>{`
         @media (max-width: 768px) {

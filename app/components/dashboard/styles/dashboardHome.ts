@@ -79,6 +79,11 @@ export const homeStyles: Record<string, React.CSSProperties> = {
         gap: 12,
     },
 
+    usageSection: {
+        position: 'relative',
+        marginTop: 12,
+    },
+
     upcomingSection: {
         position: 'relative',
         marginTop: 12,

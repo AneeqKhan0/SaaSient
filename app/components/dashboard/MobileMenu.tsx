@@ -34,6 +34,8 @@ export function MobileMenu({ email, onSignOut }: MobileMenuProps) {
     { href: '/dashboard/leads', label: 'Qualified Leads', active: pathname.startsWith('/dashboard/leads') },
     { href: '/dashboard/whatsapp', label: 'WhatsApp', active: pathname.startsWith('/dashboard/whatsapp') },
     { href: '/dashboard/appointments', label: 'Appointments', active: pathname.startsWith('/dashboard/appointments') },
+    { href: '/dashboard/usage', label: 'Plan Usage', active: pathname.startsWith('/dashboard/usage') },
+    { href: '/dashboard/settings', label: '⚙️ Settings', active: pathname.startsWith('/dashboard/settings') },
   ];
 
   return (
@@ -67,15 +69,11 @@ export function MobileMenu({ email, onSignOut }: MobileMenuProps) {
 
       <div style={{ ...styles.menu, ...(isOpen ? styles.menuOpen : {}) }} className="mobileMenuContainer">
         <div style={styles.menuHeader}>
-          <div style={styles.brand}>
-            <div style={styles.logoWrap}>
-              <div style={styles.logoInner}>S</div>
-            </div>
-            <div>
-              <div style={styles.brandTitle}>SaaSient</div>
-              <div style={styles.brandSub}>Dashboard</div>
-            </div>
-          </div>
+          <img 
+            src="/saasient-logo.png" 
+            alt="SaaSient Logo" 
+            style={styles.menuLogo}
+          />
         </div>
 
         <nav style={styles.nav}>
@@ -98,7 +96,6 @@ export function MobileMenu({ email, onSignOut }: MobileMenuProps) {
             <div style={styles.avatar}>{(email?.[0] ?? 'U').toUpperCase()}</div>
             <div style={{ overflow: 'hidden', minWidth: 0 }}>
               <div style={styles.userEmail}>{email ?? '...'}</div>
-              <div style={styles.userRole}>Admin</div>
             </div>
           </div>
           <button onClick={onSignOut} style={styles.signOut}>
@@ -173,6 +170,11 @@ const styles: Record<string, CSSProperties> = {
     paddingBottom: 12,
     borderBottom: `1px solid ${colors.card.border}`,
   },
+  menuLogo: {
+    height: 40,
+    width: 'auto',
+    objectFit: 'contain',
+  },
   brand: {
     display: 'flex',
     alignItems: 'center',
@@ -236,6 +238,7 @@ const styles: Record<string, CSSProperties> = {
     flexDirection: 'column',
     gap: 10,
     paddingTop: 12,
+    paddingBottom: 20,
     borderTop: `1px solid ${colors.card.border}`,
   },
   userRow: {
@@ -265,10 +268,6 @@ const styles: Record<string, CSSProperties> = {
     overflow: 'hidden',
     textOverflow: 'ellipsis',
   },
-  userRole: {
-    fontSize: 12,
-    color: colors.text.secondary,
-  },
   signOut: {
     height: 40,
     borderRadius: borderRadius.sm,
@@ -277,6 +276,11 @@ const styles: Record<string, CSSProperties> = {
     color: colors.text.primary,
     fontWeight: 850,
     cursor: 'pointer',
-    fontSize: 15,
+    fontSize: 14,
+    width: '100%',
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: 20,
   },
 };

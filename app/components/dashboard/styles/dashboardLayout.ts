@@ -51,6 +51,18 @@ export const layoutStyles: Record<string, React.CSSProperties> = {
 
     brand: { display: 'flex', alignItems: 'center', gap: 10 },
 
+    logo: {
+        height: 48,
+        width: 'auto',
+        objectFit: 'contain',
+    },
+
+    mobileLogo: {
+        height: 40,
+        width: 'auto',
+        objectFit: 'contain',
+    },
+
     logoWrap: {
         width: 38,
         height: 38,
