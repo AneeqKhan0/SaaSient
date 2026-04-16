@@ -8,7 +8,9 @@ import { useFormatters } from '../shared/hooks';
 
 type Appointment = {
   id: string;
-  customer_name: string | null;
+  Full_name: string | null;
+  First_Name: string | null;
+  Last_Name: string | null;
   appointment_time: string | null;
   requirements: string | null;
   phone: string | null;
@@ -42,7 +44,7 @@ export function UpcomingAppointments() {
 
       const { data, error } = await supabase
         .from('lead_store')
-        .select('id, customer_name, appointment_time, requirements, phone, email, lead_score, "Lead Category"')
+        .select('id, Full_name, First_Name, Last_Name, appointment_time, requirements, phone, email, lead_score, "Lead Category"')
         .eq('company_id', COMPANY_ID)
         .not('appointment_time', 'is', null)
         .gte('appointment_time', now.toISOString())
@@ -163,7 +165,7 @@ export function UpcomingAppointments() {
                 <div style={styles.cardHeader}>
                   <div style={styles.cardLeft}>
                     <div style={styles.customerName}>
-                      {apt.customer_name || 'Unknown Lead'}
+                      {apt.Full_name || `${apt.First_Name || ''} ${apt.Last_Name || ''}`.trim() || 'Unknown Lead'}
                     </div>
                     <div style={styles.timeInfo}>
                       <span style={styles.timeIcon}>🕐</span>
@@ -213,7 +215,7 @@ export function UpcomingAppointments() {
             <div style={styles.modalHeader}>
               <div>
                 <div style={styles.modalTitle}>
-                  {selectedAppointment.customer_name || 'Unknown Lead'}
+                  {selectedAppointment.Full_name || `${selectedAppointment.First_Name || ''} ${selectedAppointment.Last_Name || ''}`.trim() || 'Unknown Lead'}
                 </div>
                 <div style={styles.modalSubtitle}>
                   {selectedAppointment.appointment_time && formatFull(selectedAppointment.appointment_time)}

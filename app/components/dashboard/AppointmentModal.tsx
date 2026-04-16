@@ -4,7 +4,9 @@ type AppointmentModalProps = {
   isOpen: boolean;
   onClose: () => void;
   appointment: {
-    customer_name?: string | null;
+    Full_name?: string | null;
+    First_Name?: string | null;
+    Last_Name?: string | null;
     appointment_time?: string | null;
     requirements?: string | null;
     email?: string | null;
@@ -54,7 +56,7 @@ export function AppointmentModal({ isOpen, onClose, appointment, formatFull }: A
             <div style={styles.icon} className="appointmentModalIcon">📅</div>
             <div style={{ minWidth: 0, flex: 1 }}>
               <div style={styles.title} className="appointmentModalTitle">
-                {appointment.customer_name?.trim() || 'Unknown Lead'}
+                {appointment.Full_name || `${appointment.First_Name || ''} ${appointment.Last_Name || ''}`.trim() || 'Unknown Lead'}
               </div>
               <div style={styles.subtitle}>
                 {appointment.appointment_time ? formatFull(appointment.appointment_time) : 'No date specified'}

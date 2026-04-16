@@ -3,6 +3,13 @@ import { ymd } from '@/app/components/shared/utils';
 import { LeadAppointmentRow } from './types';
 import { appointmentStyles as styles } from './styles';
 
+// Helper function to get display name from lead
+const getLeadName = (lead: LeadAppointmentRow): string => {
+    return lead.Full_name?.trim() || 
+           `${lead.First_Name || ''} ${lead.Last_Name || ''}`.trim() || 
+           'Unknown';
+};
+
 type MonthViewProps = {
     gridDays: Date[];
     cursor: Date;
@@ -68,7 +75,7 @@ export function MonthView({ gridDays, cursor, byDay, setActive, loading, formatT
                                     <AppointmentCard
                                         key={String(a.id)}
                                         time={formatTime(a.appointment_time || '')}
-                                        title={a.customer_name?.trim() || 'Unknown'}
+                                        title={getLeadName(a)}
                                         onClick={() => setActive(a)}
                                     />
                                 ))}

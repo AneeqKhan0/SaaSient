@@ -1,6 +1,8 @@
 export type LeadAppointmentRow = {
     id: string | number;
-    customer_name: string | null;
+    Full_name: string | null;
+    First_Name: string | null;
+    Last_Name: string | null;
     requirements: string | null;
     appointment_time: string | null;
     phone: string | null;

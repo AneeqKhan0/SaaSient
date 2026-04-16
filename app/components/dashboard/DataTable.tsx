@@ -89,7 +89,7 @@ export function DataTable({
   };
 
   const getItemTitle = (item: any): string => {
-    return item?.customer_name || item?.name || item?.phone || item?.email || 'Item';
+    return item?.Full_name || `${item?.First_Name || ''} ${item?.Last_Name || ''}`.trim() || item?.customer_name || item?.name || item?.phone || item?.email || 'Item';
   };
 
   return (

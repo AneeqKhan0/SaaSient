@@ -11,10 +11,13 @@ type User = {
   id: string;
   email: string;
   created_at: string;
+  role: string;
 };
 
 export default function SettingsPage() {
   const [users, setUsers] = useState<User[]>([]);
+  const [currentUserId, setCurrentUserId] = useState<string | null>(null);
+  const [currentUserRole, setCurrentUserRole] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [showAddUser, setShowAddUser] = useState(false);
@@ -40,6 +43,21 @@ export default function SettingsPage() {
       if (!session) {
         setError('Not authenticated');
         return;
+      }
+
+      // Get current user ID and role
+      setCurrentUserId(session.user.id);
+      
+      const COMPANY_ID = process.env.NEXT_PUBLIC_COMPANY_ID;
+      if (COMPANY_ID) {
+        const { data: membership } = await supabase
+          .from('company_members')
+          .select('role')
+          .eq('user_id', session.user.id)
+          .eq('company_id', COMPANY_ID)
+          .single();
+        
+        setCurrentUserRole(membership?.role || null);
       }
 
       // Fetch users
@@ -122,7 +140,13 @@ export default function SettingsPage() {
     }
   };
 
-  const handleRemoveUser = async (userId: string) => {
+  const handleRemoveUser = async (userId: string, userRole: string) => {
+    // Prevent deleting admin users
+    if (userRole === 'admin') {
+      setError('Cannot delete admin users. Only members can be removed.');
+      return;
+    }
+
     if (!confirm('Are you sure you want to remove this user?')) {
       return;
     }
@@ -200,19 +224,33 @@ export default function SettingsPage() {
     <div style={styles.shell}>
       <div style={styles.scrollContainer}>
         <div style={styles.container}>
-          <div style={styles.header}>
-            <div>
-              <h1 style={styles.title}>Settings</h1>
-              <p style={styles.subtitle}>Manage your team (max 3 users)</p>
+          {/* Access Denied for Non-Admin Users */}
+          {currentUserRole && currentUserRole !== 'admin' ? (
+            <div style={styles.accessDenied}>
+              <div style={styles.accessDeniedIcon}>🔒</div>
+              <div style={styles.accessDeniedTitle}>Access Denied</div>
+              <div style={styles.accessDeniedMessage}>
+                You don't have permission to access this page. Only administrators can manage team settings.
+              </div>
+              <div style={styles.accessDeniedRole}>
+                Your role: <span style={styles.memberBadge}>👤 Member</span>
+              </div>
             </div>
-          </div>
+          ) : (
+            <>
+              <div style={styles.header}>
+                <div>
+                  <h1 style={styles.title}>Settings</h1>
+                  <p style={styles.subtitle}>Manage your team (max 3 users)</p>
+                </div>
+              </div>
 
-          {error && (
-            <div style={styles.error}>{error}</div>
-          )}
+              {error && (
+                <div style={styles.error}>{error}</div>
+              )}
 
-          {/* Team Management Section */}
-          <div style={styles.section}>
+              {/* Team Management Section */}
+              <div style={styles.section}>
             <div style={styles.sectionHeader}>
               <h2 style={styles.sectionTitle}>👥 Team Members ({users.length}/3)</h2>
               {users.length < 3 && (
@@ -266,6 +304,7 @@ export default function SettingsPage() {
                   <thead>
                     <tr style={styles.tableHeaderRow}>
                       <th style={styles.tableHeader}>Email</th>
+                      <th style={styles.tableHeader}>Role</th>
                       <th style={styles.tableHeader}>Added</th>
                       <th style={styles.tableHeader}>Actions</th>
                     </tr>
@@ -274,24 +313,41 @@ export default function SettingsPage() {
                     {users.map((user) => (
                       <>
                         <tr key={user.id} style={styles.tableRow}>
-                          <td style={styles.tableCell}>{user.email}</td>
+                          <td style={styles.tableCell}>
+                            {user.email}
+                            {user.id === currentUserId && (
+                              <span style={styles.youBadge}> (You)</span>
+                            )}
+                          </td>
+                          <td style={styles.tableCell}>
+                            <span style={user.role === 'admin' ? styles.adminBadge : styles.memberBadge}>
+                              {user.role === 'admin' ? '👑 Admin' : '👤 Member'}
+                            </span>
+                          </td>
                           <td style={styles.tableCell}>
                             {new Date(user.created_at).toLocaleDateString()}
                           </td>
                           <td style={styles.tableCell}>
                             <div style={styles.actionButtons}>
-                              <button
-                                onClick={() => setEditingUserId(editingUserId === user.id ? null : user.id)}
-                                style={styles.updateButton}
-                              >
-                                {editingUserId === user.id ? 'Cancel' : 'Update Password'}
-                              </button>
-                              <button
-                                onClick={() => handleRemoveUser(user.id)}
-                                style={styles.removeButton}
-                              >
-                                Remove
-                              </button>
+                              {user.role !== 'admin' && (
+                                <>
+                                  <button
+                                    onClick={() => setEditingUserId(editingUserId === user.id ? null : user.id)}
+                                    style={styles.updateButton}
+                                  >
+                                    {editingUserId === user.id ? 'Cancel' : 'Update Password'}
+                                  </button>
+                                  <button
+                                    onClick={() => handleRemoveUser(user.id, user.role)}
+                                    style={styles.removeButton}
+                                  >
+                                    Remove
+                                  </button>
+                                </>
+                              )}
+                              {user.role === 'admin' && (
+                                <span style={styles.protectedText}>Protected</span>
+                              )}
                             </div>
                           </td>
                         </tr>
@@ -324,7 +380,9 @@ export default function SettingsPage() {
                 </table>
               </div>
             )}
-          </div>
+              </div>
+            </>
+          )}
         </div>
       </div>
     </div>
@@ -489,5 +547,73 @@ const styles: Record<string, CSSProperties> = {
     fontSize: 14,
     fontWeight: 700,
     marginBottom: spacing.md,
+  },
+  adminBadge: {
+    display: 'inline-block',
+    padding: '4px 10px',
+    borderRadius: borderRadius.sm,
+    background: 'rgba(251,191,36,0.15)',
+    border: '1px solid rgba(251,191,36,0.3)',
+    color: '#fbbf24',
+    fontSize: 12,
+    fontWeight: 700,
+  },
+  memberBadge: {
+    display: 'inline-block',
+    padding: '4px 10px',
+    borderRadius: borderRadius.sm,
+    background: 'rgba(148,163,184,0.15)',
+    border: '1px solid rgba(148,163,184,0.3)',
+    color: '#94a3b8',
+    fontSize: 12,
+    fontWeight: 700,
+  },
+  youBadge: {
+    color: colors.accent,
+    fontSize: 12,
+    fontWeight: 700,
+    fontStyle: 'italic',
+  },
+  protectedText: {
+    color: colors.text.tertiary,
+    fontSize: 13,
+    fontWeight: 600,
+    fontStyle: 'italic',
+  },
+  accessDenied: {
+    display: 'flex',
+    flexDirection: 'column',
+    alignItems: 'center',
+    justifyContent: 'center',
+    padding: spacing.xl * 2,
+    textAlign: 'center',
+    minHeight: 400,
+  },
+  accessDeniedIcon: {
+    fontSize: 64,
+    marginBottom: spacing.lg,
+  },
+  accessDeniedTitle: {
+    fontSize: 28,
+    fontWeight: 950,
+    color: colors.text.primary,
+    marginBottom: spacing.md,
+    letterSpacing: -0.4,
+  },
+  accessDeniedMessage: {
+    fontSize: 16,
+    fontWeight: 600,
+    color: colors.text.secondary,
+    marginBottom: spacing.lg,
+    maxWidth: 500,
+    lineHeight: 1.6,
+  },
+  accessDeniedRole: {
+    fontSize: 14,
+    fontWeight: 600,
+    color: colors.text.tertiary,
+    display: 'flex',
+    alignItems: 'center',
+    gap: spacing.sm,
   },
 };

@@ -2,6 +2,13 @@ import { LeadAppointmentRow } from './types';
 import { ymd } from '@/app/components/shared/utils';
 import { colors, borderRadius, spacing } from '@/app/components/shared/constants';
 
+// Helper function to get display name from lead
+const getLeadName = (lead: LeadAppointmentRow): string => {
+    return lead.Full_name?.trim() || 
+           `${lead.First_Name || ''} ${lead.Last_Name || ''}`.trim() || 
+           'Unknown';
+};
+
 type OutlookWeekViewProps = {
     weekDays: Date[];
     byDay: Record<string, LeadAppointmentRow[]>;
@@ -77,7 +84,7 @@ export function OutlookWeekView({ weekDays, byDay, setActive, loading }: Outlook
                                                             }) : ''}
                                                         </div>
                                                         <div style={styles.appointmentName}>
-                                                            {apt.customer_name?.trim() || 'Unknown'}
+                                                            {getLeadName(apt)}
                                                         </div>
                                                     </div>
                                                 ))}

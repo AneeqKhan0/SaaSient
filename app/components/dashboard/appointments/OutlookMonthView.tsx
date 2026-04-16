@@ -2,6 +2,13 @@ import { LeadAppointmentRow } from './types';
 import { ymd } from '@/app/components/shared/utils';
 import { colors, borderRadius, spacing } from '@/app/components/shared/constants';
 
+// Helper function to get display name from lead
+const getLeadName = (lead: LeadAppointmentRow): string => {
+    return lead.Full_name?.trim() || 
+           `${lead.First_Name || ''} ${lead.Last_Name || ''}`.trim() || 
+           'Unknown';
+};
+
 type OutlookMonthViewProps = {
     gridDays: Date[];
     cursor: Date;
@@ -87,7 +94,7 @@ export function OutlookMonthView({
                                         </div>
                                         <div style={styles.appointmentDetails}>
                                             <div style={styles.appointmentTitle}>
-                                                {apt.customer_name?.trim() || 'Unknown'}
+                                                {getLeadName(apt)}
                                             </div>
                                             {apt.requirements && (
                                                 <div style={styles.appointmentSubtitle}>

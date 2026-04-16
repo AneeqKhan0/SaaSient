@@ -1,28 +1,25 @@
 import { CSSProperties } from 'react';
-import { colors, borderRadius } from '../shared/constants';
+import { colors } from '../shared/constants';
 
-type SelectProps = {
-  id?: string;
+type SelectOption = {
   value: string;
-  onChange: (value: string) => void;
-  options: { value: string; label: string }[];
-  label?: string;
-  required?: boolean;
+  label: string;
 };
 
-export function Select({ id, value, onChange, options, label, required }: SelectProps) {
+type SelectProps = {
+  label: string;
+  value: string;
+  onChange: (value: string) => void;
+  options: SelectOption[];
+};
+
+export function Select({ label, value, onChange, options }: SelectProps) {
   return (
-    <div style={styles.wrapper}>
-      {label && (
-        <label htmlFor={id} style={styles.label}>
-          {label}
-        </label>
-      )}
+    <div style={styles.container}>
+      <label style={styles.label}>{label}</label>
       <select
-        id={id}
         value={value}
         onChange={(e) => onChange(e.target.value)}
-        required={required}
         style={styles.select}
       >
         {options.map((option) => (
@@ -36,7 +33,7 @@ export function Select({ id, value, onChange, options, label, required }: Select
 }
 
 const styles: Record<string, CSSProperties> = {
-  wrapper: {
+  container: {
     display: 'flex',
     flexDirection: 'column',
     gap: 8,
@@ -44,18 +41,16 @@ const styles: Record<string, CSSProperties> = {
   label: {
     fontSize: 12,
     fontWeight: 700,
-    color: colors.text.secondary,
-    textTransform: 'uppercase',
-    letterSpacing: 0.5,
+    color: colors.text.tertiary,
   },
   select: {
     height: 46,
     width: '100%',
-    borderRadius: borderRadius.sm,
-    border: `1px solid ${colors.card.border}`,
+    borderRadius: 12,
+    border: '1px solid rgba(255,255,255,0.10)',
     background: 'rgba(0,0,0,0.22)',
     color: colors.text.primary,
-    padding: '0 12px',
+    padding: '0 14px',
     outline: 'none',
     fontSize: 15,
     fontWeight: 700,

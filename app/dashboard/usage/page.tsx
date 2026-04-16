@@ -73,7 +73,7 @@ export default function UsagePage() {
       // Get leads from lead_store
       const { data: leadStoreData, error: leadStoreError } = await supabase
         .from('lead_store')
-        .select('phone, email, customer_name, Source, "Lead Category", date, appointment_time')
+        .select('phone, email, Full_name, First_Name, Last_Name, Source, "Lead Category", date, appointment_time')
         .eq('company_id', COMPANY_ID);
 
       if (leadStoreError) throw new Error(`Lead store error: ${leadStoreError.message}`);
@@ -111,8 +111,10 @@ export default function UsagePage() {
           identifier = phone;
         } else if (lead.email) {
           identifier = lead.email.toLowerCase();
-        } else if (lead.customer_name) {
-          identifier = lead.customer_name.toLowerCase();
+        } else if (lead.Full_name) {
+          identifier = lead.Full_name.toLowerCase();
+        } else if (lead.First_Name || lead.Last_Name) {
+          identifier = `${lead.First_Name || ''} ${lead.Last_Name || ''}`.trim().toLowerCase();
         }
         
         if (identifier) {

@@ -40,11 +40,17 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
         }
 
         setUserRole(membership.role);
+        
+        // Redirect non-admin users away from settings
+        if (membership.role !== 'admin' && pathname.startsWith('/dashboard/settings')) {
+          router.replace('/dashboard');
+          return;
+        }
       }
 
       setEmail(data.session.user.email ?? null);
     })();
-  }, [router]);
+  }, [router, pathname]);
 
   async function signOut() {
     await supabase.auth.signOut();
@@ -99,15 +105,22 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
         </nav>
 
         <div style={styles.sidebarFooter} className="dashFooter">
-          <NavItem
-            href="/dashboard/settings"
-            label="⚙️ Settings"
-            active={pathname.startsWith('/dashboard/settings')}
-          />
+          {userRole === 'admin' && (
+            <NavItem
+              href="/dashboard/settings"
+              label="⚙️ Settings"
+              active={pathname.startsWith('/dashboard/settings')}
+            />
+          )}
           <div style={styles.userRow}>
             <div style={styles.avatar}>{(email?.[0] ?? 'U').toUpperCase()}</div>
             <div style={{ overflow: 'hidden' }}>
               <div style={styles.userEmail}>{email ?? '...'}</div>
+              {userRole && (
+                <div style={styles.userRole}>
+                  {userRole === 'admin' ? '👑 Admin' : '👤 Member'}
+                </div>
+              )}
             </div>
           </div>
           <button onClick={signOut} style={styles.signOut}>

@@ -34,11 +34,12 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: 'No company found' }, { status: 404 });
     }
 
-    // Get all company members
+    // Get all company members with roles
     const { data: members, error } = await supabaseAdmin
       .from('company_members')
       .select(`
         user_id,
+        role,
         created_at
       `)
       .eq('company_id', membership.company_id)
@@ -55,6 +56,7 @@ export async function GET(request: NextRequest) {
         return {
           id: member.user_id,
           email: authUser?.email || 'Unknown',
+          role: member.role,
           created_at: member.created_at,
         };
       })
@@ -134,13 +136,13 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Failed to create user' }, { status: 500 });
     }
 
-    // Add to company_members (all users are admins)
+    // Add to company_members as 'member' role (not admin)
     const { error: memberError } = await supabaseAdmin
       .from('company_members')
       .insert({
         user_id: newUser.user.id,
         company_id: membership.company_id,
-        role: 'admin',
+        role: 'member',
       });
 
     if (memberError) {
@@ -197,12 +199,29 @@ export async function DELETE(request: NextRequest) {
     // Get user's company
     const { data: membership } = await supabaseAdmin
       .from('company_members')
-      .select('company_id')
+      .select('company_id, role')
       .eq('user_id', user.id)
       .single();
 
     if (!membership) {
       return NextResponse.json({ error: 'No company found' }, { status: 404 });
+    }
+
+    // Only admins can delete users
+    if (membership.role !== 'admin') {
+      return NextResponse.json({ error: 'Only admins can remove users' }, { status: 403 });
+    }
+
+    // Check if user to remove is an admin
+    const { data: targetMembership } = await supabaseAdmin
+      .from('company_members')
+      .select('role')
+      .eq('user_id', userIdToRemove)
+      .eq('company_id', membership.company_id)
+      .single();
+
+    if (targetMembership?.role === 'admin') {
+      return NextResponse.json({ error: 'Cannot remove admin users' }, { status: 403 });
     }
 
     // Remove from company_members

@@ -1,7 +1,42 @@
 import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
+import { createClient } from '@supabase/supabase-js';
 
-export function middleware(request: NextRequest) {
+export async function middleware(request: NextRequest) {
+  const { pathname } = request.nextUrl;
+
+  // Admin route protection
+  if (pathname.startsWith('/admin/dashboard')) {
+    const adminSession = request.cookies.get('admin_session');
+    
+    if (!adminSession) {
+      return NextResponse.redirect(new URL('/admin/login', request.url));
+    }
+  }
+
+  // Company suspension check for regular dashboard routes
+  if (pathname.startsWith('/dashboard') && !pathname.startsWith('/dashboard/suspended')) {
+    const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+    const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+    
+    if (supabaseUrl && supabaseServiceKey) {
+      const supabase = createClient(supabaseUrl, supabaseServiceKey);
+      const companyId = process.env.NEXT_PUBLIC_COMPANY_ID;
+      
+      if (companyId) {
+        const { data: company } = await supabase
+          .from('companies')
+          .select('status')
+          .eq('id', companyId)
+          .single();
+        
+        if (company?.status === 'suspended') {
+          return NextResponse.redirect(new URL('/suspended', request.url));
+        }
+      }
+    }
+  }
+
   const response = NextResponse.next();
 
   // Add security headers

@@ -11,7 +11,9 @@ import { useFormatters } from '@/app/components/shared/hooks';
 type Tab = 'whatsapp' | 'voice';
 
 const WHATSAPP_COLUMNS: string[] = [
-  'customer_name',
+  'First_Name',
+  'Last_Name',
+  'Full_name',
   'phone',
   'email',
   'property_type',
@@ -90,7 +92,7 @@ export default function LeadsPage() {
       // First, let's check what Source values actually exist
       const { data: allData, error: allError } = await supabase
         .from('lead_store')
-        .select('Source, customer_name, id')
+        .select('Source, First_Name, Last_Name, Full_name, id')
         .eq('company_id', COMPANY_ID)
         .limit(20);
 
@@ -185,8 +187,16 @@ export default function LeadsPage() {
   }
 
   function getNiceTitle(row: any): string {
-    const name = (row?.customer_name ?? row?.name ?? '').trim();
+    const name = (row?.Full_name ?? row?.customer_name ?? row?.name ?? '').trim();
     if (name) return name;
+    
+    // Try to construct from First_Name and Last_Name
+    const firstName = (row?.First_Name ?? '').trim();
+    const lastName = (row?.Last_Name ?? '').trim();
+    if (firstName || lastName) {
+      return `${firstName} ${lastName}`.trim();
+    }
+    
     const phone = (row?.phone ?? row?.phone_number ?? '').trim();
     if (phone) return phone;
     const email = (row?.email ?? '').trim();

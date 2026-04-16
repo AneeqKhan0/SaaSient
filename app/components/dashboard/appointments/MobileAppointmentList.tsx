@@ -2,6 +2,13 @@ import { AppointmentCard } from '@/app/components/dashboard/AppointmentCard';
 import { LeadAppointmentRow } from './types';
 import { colors, borderRadius, spacing } from '@/app/components/shared/constants';
 
+// Helper function to get display name from lead
+const getLeadName = (lead: LeadAppointmentRow): string => {
+    return lead.Full_name?.trim() || 
+           `${lead.First_Name || ''} ${lead.Last_Name || ''}`.trim() || 
+           'Unknown';
+};
+
 type MobileAppointmentListProps = {
     appointments: LeadAppointmentRow[];
     setActive: (a: LeadAppointmentRow) => void;
@@ -64,7 +71,7 @@ export function MobileAppointmentList({
                             <AppointmentCard
                                 key={String(apt.id)}
                                 time={formatTime(apt.appointment_time || '')}
-                                title={apt.customer_name?.trim() || 'Unknown Lead'}
+                                title={getLeadName(apt)}
                                 subtitle={apt.requirements ? apt.requirements.substring(0, 80) + (apt.requirements.length > 80 ? '...' : '') : undefined}
                                 onClick={() => setActive(apt)}
                                 style={{ marginBottom: 8 }}

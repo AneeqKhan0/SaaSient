@@ -90,7 +90,7 @@ export default function AppointmentsPage() {
 
       const { data, error } = await supabase
         .from('lead_store')
-        .select('id, customer_name, requirements, appointment_time, phone, email, lead_score')
+        .select('id, Full_name, First_Name, Last_Name, requirements, appointment_time, phone, email, lead_score')
         .eq('company_id', COMPANY_ID)
         .not('appointment_time', 'is', null)
         .gte('appointment_time', startISO.toISOString())

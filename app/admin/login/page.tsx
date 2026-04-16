@@ -1,8 +1,7 @@
 'use client';
 
-import React, { useEffect, useState } from 'react';
+import React, { useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { supabase } from '@/lib/supabaseClient';
 import { AuthLayout } from '@/app/components/auth/AuthLayout';
 import { GlowCard } from '@/app/components/auth/GlowCard';
 import { AuthForm } from '@/app/components/auth/AuthForm';
@@ -19,34 +18,35 @@ export default function AdminLoginPage() {
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState<string | null>(null);
 
-  useEffect(() => {
-    (async () => {
-      const { data } = await supabase.auth.getSession();
-      if (data.session) {
-        router.replace('/admin/onboard-customer');
-      }
-    })();
-  }, [router]);
-
   async function onSubmit(e: React.FormEvent) {
     e.preventDefault();
     setLoading(true);
     setMessage(null);
 
-    // Simple authentication - no company check
-    const { data: authData, error } = await supabase.auth.signInWithPassword({
-      email,
-      password,
-    });
+    try {
+      const response = await fetch('/api/admin/auth/login', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ email, password }),
+      });
 
-    if (error) {
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.error || 'Login failed');
+      }
+
+      // Wait a bit for cookie to be set, then redirect
+      await new Promise(resolve => setTimeout(resolve, 100));
+      
+      // Use window.location for a hard redirect to ensure cookie is sent
+      window.location.href = '/admin/dashboard';
+    } catch (error: any) {
+      setMessage(error.message || 'Login failed');
       setLoading(false);
-      setMessage(error.message);
-      return;
     }
-
-    setLoading(false);
-    router.replace('/admin/onboard-customer');
   }
 
   return (

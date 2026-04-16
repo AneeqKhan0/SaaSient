@@ -44,7 +44,7 @@ export function UsageStats({ onLimitReached }: UsageStatsProps) {
       // 1. Get leads from lead_store (both WhatsApp agent and Voice Agent)
       const { data: leadStoreData, error: leadStoreError } = await supabase
         .from('lead_store')
-        .select('phone, email, customer_name')
+        .select('phone, email, Full_name, First_Name, Last_Name')
         .eq('company_id', COMPANY_ID);
 
       if (leadStoreError) {
@@ -71,8 +71,10 @@ export function UsageStats({ onLimitReached }: UsageStatsProps) {
           uniqueLeads.add(phone);
         } else if (lead.email) { // Fallback to email if no valid phone
           uniqueLeads.add(lead.email.toLowerCase());
-        } else if (lead.customer_name) { // Last resort: use name
-          uniqueLeads.add(lead.customer_name.toLowerCase());
+        } else if (lead.Full_name) { // Use Full_name
+          uniqueLeads.add(lead.Full_name.toLowerCase());
+        } else if (lead.First_Name || lead.Last_Name) { // Construct from First/Last
+          uniqueLeads.add(`${lead.First_Name || ''} ${lead.Last_Name || ''}`.trim().toLowerCase());
         }
       });
 

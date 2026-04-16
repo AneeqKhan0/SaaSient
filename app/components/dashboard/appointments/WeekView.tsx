@@ -82,7 +82,7 @@ export function WeekView({ weekDays, byDay, setActive, loading, formatTime }: We
                                     <AppointmentCard
                                         key={String(a.id)}
                                         time={formatTime(a.appointment_time || '')}
-                                        title={a.customer_name?.trim() || 'Unknown'}
+                                        title={getLeadName(a)}
                                         onClick={() => setActive(a)}
                                         style={{ marginBottom: 4 }}
                                     />

@@ -19,7 +19,7 @@ export default function DebugCompanyPage() {
       // Check lead_store
       const { data: allLeads, error: allLeadsError } = await supabase
         .from('lead_store')
-        .select('id, company_id, customer_name')
+        .select('id, company_id, Full_name, First_Name, Last_Name')
         .limit(5);
       
       results.tables.lead_store = {
@@ -32,7 +32,7 @@ export default function DebugCompanyPage() {
       if (COMPANY_ID) {
         const { data: filteredLeads, error: filteredError } = await supabase
           .from('lead_store')
-          .select('id, company_id, customer_name')
+          .select('id, company_id, Full_name, First_Name, Last_Name')
           .eq('company_id', COMPANY_ID)
           .limit(5);
         
