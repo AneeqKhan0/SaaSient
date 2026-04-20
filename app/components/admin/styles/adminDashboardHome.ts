@@ -8,6 +8,7 @@ export const adminHomeStyles: Record<string, React.CSSProperties> = {
         padding: 18,
         borderRadius: 24,
         overflow: 'auto',
+        overflowX: 'hidden',
         background:
             'radial-gradient(900px 420px at 18% 0%, rgba(0,153,249,0.22), transparent 60%), radial-gradient(700px 320px at 88% 15%, rgba(0,153,249,0.12), transparent 65%), linear-gradient(180deg, #060606, #050505)',
         border: '1px solid rgba(255,255,255,0.08)',
@@ -77,7 +78,7 @@ export const adminHomeStyles: Record<string, React.CSSProperties> = {
     metricsGrid: {
         position: 'relative',
         display: 'grid',
-        gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))',
+        gridTemplateColumns: 'repeat(auto-fit, minmax(140px, 1fr))',
         gap: 12,
         marginTop: 14,
     },
@@ -89,6 +90,8 @@ export const adminHomeStyles: Record<string, React.CSSProperties> = {
         borderRadius: 16,
         background: 'rgba(0,0,0,0.22)',
         border: '1px solid rgba(255,255,255,0.08)',
+        width: '100%',
+        boxSizing: 'border-box',
     },
 
     filtersRow: {
@@ -96,11 +99,13 @@ export const adminHomeStyles: Record<string, React.CSSProperties> = {
         gap: 10,
         marginBottom: 10,
         flexWrap: 'wrap',
+        width: '100%',
     },
 
     searchInput: {
         flex: 1,
-        minWidth: 200,
+        minWidth: 0,
+        width: '100%',
         padding: 10,
         background: 'rgba(255,255,255,0.04)',
         border: '1px solid rgba(255,255,255,0.10)',
@@ -109,6 +114,7 @@ export const adminHomeStyles: Record<string, React.CSSProperties> = {
         fontSize: 14,
         fontWeight: 600,
         outline: 'none',
+        boxSizing: 'border-box',
     },
 
     select: {
@@ -121,6 +127,8 @@ export const adminHomeStyles: Record<string, React.CSSProperties> = {
         fontWeight: 600,
         cursor: 'pointer',
         outline: 'none',
+        minWidth: 0,
+        boxSizing: 'border-box',
     },
 
     exportButtons: {
@@ -144,6 +152,9 @@ export const adminHomeStyles: Record<string, React.CSSProperties> = {
     tableSection: {
         position: 'relative',
         marginTop: 14,
+        marginBottom: 20,
+        width: '100%',
+        boxSizing: 'border-box',
     },
 
     sectionTitle: {

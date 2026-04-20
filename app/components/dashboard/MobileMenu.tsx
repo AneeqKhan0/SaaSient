@@ -229,7 +229,7 @@ const styles: Record<string, CSSProperties> = {
   },
   navItemActive: {
     background: 'rgba(0,153,249,0.16)',
-    borderColor: 'rgba(0,153,249,0.35)',
+    border: '1px solid rgba(0,153,249,0.35)',
     color: colors.text.primary,
     boxShadow: '0 10px 30px rgba(0,153,249,0.14)',
   },

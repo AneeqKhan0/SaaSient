@@ -278,17 +278,31 @@ export default function WhatsAppPage() {
             </div>
           );
         }}
-        renderMessages={(conversation) => (
+        renderMessages={(conversation, chatSearch) => (
           <div style={styles.messagesContainer}>
-            {messages.map((message) => (
-              <ChatMessage
-                key={message.id}
-                sender={message.sender}
-                text={message.text}
-                timestamp={message.timestamp}
-                fontSize={currentFontSize}
-              />
-            ))}
+            {messages
+              .filter((message) => {
+                if (!chatSearch.trim()) return true;
+                return message.text.toLowerCase().includes(chatSearch.trim().toLowerCase());
+              })
+              .map((message) => (
+                <ChatMessage
+                  key={message.id}
+                  sender={message.sender}
+                  text={message.text}
+                  timestamp={message.timestamp}
+                  fontSize={currentFontSize}
+                  highlight={chatSearch.trim()}
+                />
+              ))}
+            {chatSearch.trim() &&
+              messages.filter((m) =>
+                m.text.toLowerCase().includes(chatSearch.trim().toLowerCase())
+              ).length === 0 && (
+                <div style={{ padding: 20, textAlign: 'center', color: 'rgba(255,255,255,0.4)', fontSize: 13 }}>
+                  No messages match &ldquo;{chatSearch}&rdquo;
+                </div>
+              )}
           </div>
         )}
       />

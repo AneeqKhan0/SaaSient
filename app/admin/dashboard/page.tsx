@@ -212,7 +212,7 @@ export default function AdminDashboardPage() {
 
       {/* Filters */}
       <div style={styles.filtersSection}>
-        <div style={styles.filtersRow}>
+        <div style={styles.filtersRow} className="filtersRow">
           <input
             type="text"
             placeholder="Search companies..."
@@ -245,7 +245,7 @@ export default function AdminDashboardPage() {
           </select>
         </div>
 
-        <div style={styles.exportButtons}>
+        <div style={styles.exportButtons} className="exportButtons">
           <button style={styles.exportButton} onClick={() => handleExport('companies')}>
             📊 Export Companies
           </button>
@@ -286,6 +286,23 @@ export default function AdminDashboardPage() {
           }}
         />
       )}
+
+      <style jsx>{`
+        @media (max-width: 768px) {
+          :global(.filtersRow) {
+            flex-direction: column !important;
+          }
+          :global(.filtersRow) > * {
+            width: 100% !important;
+          }
+          :global(.exportButtons) {
+            flex-direction: column !important;
+          }
+          :global(.exportButtons) > * {
+            width: 100% !important;
+          }
+        }
+      `}</style>
     </div>
   );
 }

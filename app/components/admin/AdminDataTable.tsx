@@ -54,6 +54,17 @@ export function AdminDataTable({
 
   return (
     <div style={styles.container}>
+      <style jsx>{`
+        @media (max-width: 768px) {
+          table {
+            font-size: 12px !important;
+          }
+          th, td {
+            padding: 10px 8px !important;
+            white-space: nowrap !important;
+          }
+        }
+      `}</style>
       <div style={styles.tableWrapper}>
         <table style={styles.table}>
           <thead>
@@ -127,9 +138,11 @@ const styles: Record<string, CSSProperties> = {
     border: `1px solid ${colors.card.border}`,
     borderRadius: borderRadius.lg,
     overflow: 'hidden',
+    marginBottom: 20,
   },
   tableWrapper: {
     overflowX: 'auto',
+    WebkitOverflowScrolling: 'touch',
   },
   table: {
     width: '100%',

@@ -128,7 +128,7 @@ export default function AuditLogsPage() {
 
       {/* Filters */}
       <div style={styles.filtersSection}>
-        <div style={styles.filtersRow}>
+        <div style={styles.filtersRow} className="filtersRow">
           <select
             value={filters.action}
             onChange={(e) => setFilters({ ...filters, action: e.target.value })}
@@ -141,21 +141,29 @@ export default function AuditLogsPage() {
             <option value="settings_changed">Settings Changed</option>
           </select>
 
-          <input
-            type="date"
-            value={filters.start_date}
-            onChange={(e) => setFilters({ ...filters, start_date: e.target.value })}
-            style={styles.searchInput}
-            placeholder="Start Date"
-          />
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 4, flex: 1, minWidth: 0 }}>
+            <label style={{ fontSize: 11, fontWeight: 700, color: 'rgba(255,255,255,0.55)', textTransform: 'uppercase', letterSpacing: 0.5 }}>
+              Start Date
+            </label>
+            <input
+              type="date"
+              value={filters.start_date}
+              onChange={(e) => setFilters({ ...filters, start_date: e.target.value })}
+              style={styles.searchInput}
+            />
+          </div>
 
-          <input
-            type="date"
-            value={filters.end_date}
-            onChange={(e) => setFilters({ ...filters, end_date: e.target.value })}
-            style={styles.searchInput}
-            placeholder="End Date"
-          />
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 4, flex: 1, minWidth: 0 }}>
+            <label style={{ fontSize: 11, fontWeight: 700, color: 'rgba(255,255,255,0.55)', textTransform: 'uppercase', letterSpacing: 0.5 }}>
+              End Date
+            </label>
+            <input
+              type="date"
+              value={filters.end_date}
+              onChange={(e) => setFilters({ ...filters, end_date: e.target.value })}
+              style={styles.searchInput}
+            />
+          </div>
 
           <button
             onClick={() => setFilters({ company_id: '', action: '', start_date: '', end_date: '' })}
@@ -190,6 +198,17 @@ export default function AuditLogsPage() {
           onClose={() => setSelectedLog(null)}
         />
       )}
+
+      <style jsx>{`
+        @media (max-width: 768px) {
+          :global(.filtersRow) {
+            flex-direction: column !important;
+          }
+          :global(.filtersRow) > * {
+            width: 100% !important;
+          }
+        }
+      `}</style>
     </div>
   );
 }

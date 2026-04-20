@@ -6,13 +6,42 @@ type ChatMessageProps = {
   text: string;
   timestamp?: string | null;
   fontSize?: number;
+  highlight?: string;
 };
 
-export function ChatMessage({ sender, text, timestamp, fontSize = 13 }: ChatMessageProps) {
+function highlightText(text: string, query: string, isUser: boolean) {
+  if (!query.trim()) return <>{text}</>;
+  const parts = text.split(new RegExp(`(${query.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')})`, 'gi'));
+  return (
+    <>
+      {parts.map((part, i) =>
+        part.toLowerCase() === query.toLowerCase() ? (
+          <mark
+            key={i}
+            style={{
+              background: 'rgba(255,220,0,0.55)',
+              color: '#000',
+              borderRadius: 3,
+              padding: '0 2px',
+            }}
+          >
+            {part}
+          </mark>
+        ) : (
+          part
+        )
+      )}
+    </>
+  );
+}
+
+export function ChatMessage({ sender, text, timestamp, fontSize = 13, highlight = '' }: ChatMessageProps) {
   if (sender === 'system') {
     return (
       <div style={styles.systemWrap}>
-        <div style={{ ...styles.systemMsg, fontSize }}>{text}</div>
+        <div style={{ ...styles.systemMsg, fontSize }}>
+          {highlightText(text, highlight, false)}
+        </div>
       </div>
     );
   }
@@ -27,7 +56,9 @@ export function ChatMessage({ sender, text, timestamp, fontSize = 13 }: ChatMess
       }}
     >
       <div style={{ ...styles.bubble, ...(isUser ? styles.bubbleUser : styles.bubbleBot) }}>
-        <div style={{ ...styles.msgText, fontSize }}>{text}</div>
+        <div style={{ ...styles.msgText, fontSize }}>
+          {highlightText(text, highlight, isUser)}
+        </div>
         {timestamp && <div style={styles.msgTime}>{timestamp}</div>}
       </div>
     </div>

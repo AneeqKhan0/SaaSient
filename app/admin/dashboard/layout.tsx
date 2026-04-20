@@ -3,6 +3,7 @@
 import { ReactNode, useEffect, useState } from 'react';
 import { usePathname, useRouter } from 'next/navigation';
 import { NavItem } from '@/app/components/dashboard/NavItem';
+import { AdminMobileMenu } from '@/app/components/admin/AdminMobileMenu';
 import { adminLayoutStyles as styles } from '@/app/components/admin/styles/adminDashboardLayout';
 
 export default function AdminDashboardLayout({ children }: { children: ReactNode }) {
@@ -73,6 +74,9 @@ export default function AdminDashboardLayout({ children }: { children: ReactNode
     <div style={styles.shell} className="adminShell">
       <div style={styles.bg} aria-hidden="true" />
       <div style={styles.noise} aria-hidden="true" />
+
+      {/* Mobile hamburger menu — hidden on desktop via CSS */}
+      <AdminMobileMenu email={email} onSignOut={signOut} />
 
       <aside style={styles.sidebar} className="adminSidebar">
         <div style={styles.brand}>
@@ -149,6 +153,56 @@ export default function AdminDashboardLayout({ children }: { children: ReactNode
 
         @media (prefers-reduced-motion: reduce) {
           .navItemHoverable { transition: none !important; }
+        }
+
+        /* ── Mobile responsive ── */
+        @media (max-width: 768px) {
+          .adminShell {
+            grid-template-columns: 1fr !important;
+            grid-template-rows: auto 1fr !important;
+            overflow-x: hidden !important;
+            overflow-y: auto !important;
+            height: auto !important;
+            min-height: 100vh !important;
+            width: 100vw !important;
+            max-width: 100vw !important;
+          }
+          .adminSidebar {
+            display: none !important;
+          }
+          .adminMobileTopBar {
+            display: flex !important;
+            grid-column: 1 !important;
+          }
+          .adminMain {
+            grid-column: 1 !important;
+            padding: 8px !important;
+            min-width: 0 !important;
+            overflow: hidden !important;
+            width: 100% !important;
+            box-sizing: border-box !important;
+          }
+          .adminContent {
+            min-height: auto !important;
+            max-height: none !important;
+            height: auto !important;
+            overflow: visible !important;
+            border-radius: 12px !important;
+            padding: 12px !important;
+            width: 100% !important;
+            box-sizing: border-box !important;
+          }
+          /* Prevent any child from causing horizontal overflow */
+          .adminContent * {
+            max-width: 100% !important;
+            box-sizing: border-box !important;
+          }
+          /* Fix table overflow on mobile */
+          .adminContent table {
+            display: block !important;
+            overflow-x: auto !important;
+            white-space: nowrap !important;
+          }
         }
       `}</style>
     </div>

@@ -9,7 +9,7 @@ export const adminLayoutStyles: Record<string, React.CSSProperties> = {
         color: '#fff',
         fontFamily: 'ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial',
         position: 'relative',
-        overflow: 'hidden',
+        overflow: 'clip', // clip instead of hidden — allows child scroll without cutting off
     },
 
     bg: {
@@ -155,6 +155,8 @@ export const adminLayoutStyles: Record<string, React.CSSProperties> = {
     main: {
         padding: 18,
         zIndex: 2,
+        minWidth: 0, // prevent grid blowout
+        overflow: 'hidden',
     },
 
     content: {
@@ -167,7 +169,8 @@ export const adminLayoutStyles: Record<string, React.CSSProperties> = {
         minHeight: 'calc(100vh - 36px)',
         maxHeight: 'calc(100vh - 36px)',
         boxShadow: '0 30px 110px rgba(0,0,0,0.55)',
-        overflow: 'hidden',
+        overflow: 'auto',       // was 'hidden' — now scrollable
+        overflowX: 'hidden',    // no horizontal scroll
         display: 'flex',
         flexDirection: 'column',
     },

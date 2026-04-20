@@ -108,7 +108,7 @@ export default function CompaniesPage() {
 
       {/* Filters */}
       <div style={styles.filtersSection}>
-        <div style={styles.filtersRow}>
+        <div style={styles.filtersRow} className="filtersRow">
           <input
             type="text"
             placeholder="Search companies..."
@@ -180,6 +180,17 @@ export default function CompaniesPage() {
           }}
         />
       )}
+
+      <style jsx>{`
+        @media (max-width: 768px) {
+          :global(.filtersRow) {
+            flex-direction: column !important;
+          }
+          :global(.filtersRow) > * {
+            width: 100% !important;
+          }
+        }
+      `}</style>
     </div>
   );
 }

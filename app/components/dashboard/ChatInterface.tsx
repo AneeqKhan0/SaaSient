@@ -4,6 +4,15 @@ import { ReactNode, useState, useEffect } from 'react';
 import { colors, borderRadius, spacing } from '../shared/constants';
 import { SearchInput } from './SearchInput';
 
+type CategoryTab = 'all' | 'buyer' | 'seller' | 'voiceagentfollowup';
+
+const CATEGORY_TABS: { id: CategoryTab; label: string }[] = [
+  { id: 'all',                label: 'All' },
+  { id: 'buyer',              label: 'Buyer' },
+  { id: 'seller',             label: 'Seller' },
+  { id: 'voiceagentfollowup', label: 'Voice Agent Follow Up' },
+];
+
 type ChatInterfaceProps = {
   title: string;
   subtitle: string;
@@ -16,7 +25,7 @@ type ChatInterfaceProps = {
   error?: string | null;
   renderConversationItem: (conversation: any, isActive: boolean) => ReactNode;
   renderChatHeader: (conversation: any) => ReactNode;
-  renderMessages: (conversation: any) => ReactNode;
+  renderMessages: (conversation: any, chatSearch: string) => ReactNode;
   getConversationId: (conversation: any) => string;
   emptyMessage?: string;
 };
@@ -40,12 +49,24 @@ export function ChatInterface({
 }: ChatInterfaceProps & { getNickname?: (conversation: any) => string | undefined }) {
   const [showChat, setShowChat] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
+  const [categoryTab, setCategoryTab] = useState<CategoryTab>('all');
+  const [chatSearch, setChatSearch] = useState('');
+  const [showChatSearch, setShowChatSearch] = useState(false);
+
+  // Filter conversations by category tab
+  const filteredByCategory = categoryTab === 'all'
+    ? conversations
+    : conversations.filter((c) => {
+        const label = (c.label ?? '').toLowerCase().replace(/\s+/g, '');
+        const tab = categoryTab.replace(/\s+/g, '');
+        return label.includes(tab);
+      });
 
   useEffect(() => {
     const checkMobile = () => {
       setIsMobile(window.innerWidth <= 980);
     };
-    
+
     checkMobile();
     window.addEventListener('resize', checkMobile);
     return () => window.removeEventListener('resize', checkMobile);
@@ -58,6 +79,7 @@ export function ChatInterface({
   }, [activeConversation, isMobile]);
 
   const handleConversationSelect = (conversation: any) => {
+    setChatSearch('');
     onConversationSelect(conversation);
     if (isMobile) {
       setShowChat(true);
@@ -140,18 +162,18 @@ export function ChatInterface({
             max-height: calc(100vh - 200px) !important;
           }
         }
-        
+
         /* Hover effects for conversation items */
         .chatLeft .conversation-item:hover {
           background: rgba(255,255,255,0.04) !important;
           border-color: rgba(255,255,255,0.15) !important;
         }
-        
+
         /* Smooth scrolling */
         .chatLeft, .chatRight {
           scroll-behavior: smooth;
         }
-        
+
         /* Ensure chat body scrolls */
         .chatRight {
           overflow: hidden !important;
@@ -161,7 +183,7 @@ export function ChatInterface({
           overflow-x: hidden !important;
           max-height: calc(100vh - 200px) !important;
         }
-        
+
         /* Desktop specific scrolling */
         @media (min-width: 981px) {
           .chatRight .chatBody {
@@ -169,14 +191,14 @@ export function ChatInterface({
             max-height: calc(100vh - 250px) !important;
           }
         }
-        
+
         /* Mobile touch scrolling improvements */
         @media (max-width: 980px) {
           .chatBody, .list {
             -webkit-overflow-scrolling: touch !important;
             overflow-scrolling: touch !important;
           }
-          
+
           /* Prevent body scroll when scrolling chat */
           body.chat-open {
             overflow: hidden !important;
@@ -208,6 +230,19 @@ export function ChatInterface({
           />
         </div>
 
+        {/* Category filter tabs */}
+        <div style={styles.categoryTabsRow}>
+          {CATEGORY_TABS.map((ct) => (
+            <button
+              key={ct.id}
+              onClick={() => setCategoryTab(ct.id)}
+              style={catTabBtn(categoryTab === ct.id)}
+            >
+              {ct.label}
+            </button>
+          ))}
+        </div>
+
         {error && (
           <div style={styles.alert}>
             <b>Error:</b> {error}
@@ -217,10 +252,10 @@ export function ChatInterface({
         <div style={styles.list} className="list">
           {loading ? (
             <div style={styles.muted}>Loading conversations…</div>
-          ) : conversations.length === 0 ? (
+          ) : filteredByCategory.length === 0 ? (
             <div style={styles.muted}>{emptyMessage}</div>
           ) : (
-            conversations.map((conversation) => {
+            filteredByCategory.map((conversation) => {
               const id = getConversationId(conversation);
               const isActive = activeConversation && getConversationId(activeConversation) === id;
 
@@ -251,7 +286,7 @@ export function ChatInterface({
             {isMobile && (
               <div style={styles.mobileHeader} className="chatMobileHeader">
                 <button onClick={handleBackToList} style={styles.backBtn}>
-                  ← 
+                  ←
                 </button>
                 <div style={styles.mobileHeaderContent}>
                   <div style={styles.mobileHeaderInfo}>
@@ -275,8 +310,37 @@ export function ChatInterface({
             <div style={styles.chatHeader} className={isMobile ? 'chatHeaderDesktop' : ''}>
               {renderChatHeader(activeConversation)}
             </div>
+            {/* In-chat search */}
+            <div style={styles.chatSearchRow}>
+              {showChatSearch ? (
+                <div style={styles.chatSearchInner}>
+                  <span style={styles.chatSearchIcon}>🔍</span>
+                  <input
+                    autoFocus
+                    type="text"
+                    value={chatSearch}
+                    onChange={(e) => setChatSearch(e.target.value)}
+                    placeholder="Search in this conversation…"
+                    style={styles.chatSearchInput}
+                  />
+                  {chatSearch && (
+                    <button onClick={() => setChatSearch('')} style={styles.chatSearchClear}>✕</button>
+                  )}
+                  <button
+                    onClick={() => { setShowChatSearch(false); setChatSearch(''); }}
+                    style={styles.chatSearchClose}
+                  >
+                    Close
+                  </button>
+                </div>
+              ) : (
+                <button onClick={() => setShowChatSearch(true)} style={styles.chatSearchToggle}>
+                  🔍 Search in chat
+                </button>
+              )}
+            </div>
             <div style={styles.chatBody} className="chatBody">
-              {renderMessages(activeConversation)}
+              {renderMessages(activeConversation, chatSearch)}
             </div>
           </>
         )}
@@ -388,8 +452,8 @@ const styles = {
     background: 'rgba(0,153,249,0.08)',
     boxShadow: '0 0 0 1px rgba(0,153,249,0.18), 0 14px 45px rgba(0,0,0,0.35)',
   },
-  emptyState: { 
-    padding: spacing.lg, 
+  emptyState: {
+    padding: spacing.lg,
     color: colors.text.tertiary,
     display: 'flex',
     alignItems: 'center',
@@ -480,11 +544,100 @@ const styles = {
     background: 'rgba(0,0,0,0.18)',
     flex: '1 1 auto',
     minHeight: 0,
-    maxHeight: 'calc(100vh - 280px)', // Specific height for desktop
+    maxHeight: 'calc(100vh - 280px)',
     WebkitOverflowScrolling: 'touch' as const,
     scrollBehavior: 'smooth' as const,
     overflowY: 'auto' as const,
     overflowX: 'hidden' as const,
     position: 'relative' as const,
   },
+  categoryTabsRow: {
+    display: 'flex',
+    flexWrap: 'wrap' as const,
+    gap: 6,
+    padding: `0 ${spacing.sm}px ${spacing.sm}px`,
+    flex: '0 0 auto',
+  },
+  chatSearchRow: {
+    padding: `${spacing.sm}px ${spacing.md}px`,
+    flex: '0 0 auto',
+    borderBottom: `1px solid ${colors.card.border}`,
+    display: 'flex',
+    alignItems: 'center',
+  },
+  chatSearchInner: {
+    display: 'flex',
+    alignItems: 'center',
+    gap: 8,
+    background: 'rgba(0,0,0,0.25)',
+    border: `1px solid rgba(0,153,249,0.30)`,
+    borderRadius: borderRadius.md,
+    padding: '6px 10px',
+    flex: 1,
+  },
+  chatSearchIcon: {
+    fontSize: 13,
+    flex: '0 0 auto',
+  },
+  chatSearchInput: {
+    flex: 1,
+    background: 'none',
+    border: 'none',
+    outline: 'none',
+    color: colors.text.primary,
+    fontSize: 13,
+    fontWeight: 500,
+  },
+  chatSearchClear: {
+    background: 'none',
+    border: 'none',
+    color: colors.text.secondary,
+    fontSize: 12,
+    cursor: 'pointer',
+    padding: '2px 6px',
+    borderRadius: 4,
+    flex: '0 0 auto',
+  },
+  chatSearchClose: {
+    background: 'rgba(255,255,255,0.06)',
+    border: `1px solid ${colors.card.border}`,
+    color: colors.text.secondary,
+    fontSize: 12,
+    fontWeight: 700,
+    cursor: 'pointer',
+    padding: '4px 10px',
+    borderRadius: borderRadius.xs,
+    flex: '0 0 auto',
+  },
+  chatSearchToggle: {
+    background: 'rgba(255,255,255,0.04)',
+    border: `1px solid ${colors.card.border}`,
+    color: colors.text.secondary,
+    fontSize: 12,
+    fontWeight: 600,
+    cursor: 'pointer',
+    padding: '6px 12px',
+    borderRadius: borderRadius.sm,
+    transition: 'all 150ms ease',
+    width: 'fit-content',
+    display: 'inline-flex',
+    alignItems: 'center',
+    gap: 6,
+  },
 };
+
+function catTabBtn(active: boolean) {
+  return {
+    height: 30,
+    padding: '0 12px',
+    borderRadius: borderRadius.sm,
+    border: active ? `1px solid ${colors.card.borderAccent}` : `1px solid ${colors.card.border}`,
+    background: active ? 'rgba(0,153,249,0.16)' : 'rgba(0,0,0,0.18)',
+    color: active ? colors.text.primary : colors.text.secondary,
+    fontWeight: active ? 800 : 600,
+    fontSize: 12,
+    cursor: 'pointer',
+    transition: 'all 150ms ease',
+    whiteSpace: 'nowrap' as const,
+  };
+}

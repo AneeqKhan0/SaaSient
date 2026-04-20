@@ -1,6 +1,7 @@
 'use client';
 
 import { ReactNode, useState, useEffect } from 'react';
+import React from 'react';
 import { colors, borderRadius, spacing } from '../shared/constants';
 import { SearchInput } from './SearchInput';
 import { Button } from '../shared/Button';
@@ -15,7 +16,10 @@ type DataTableProps = {
   onSearchChange: (value: string) => void;
   onDownload?: () => void;
   downloading?: boolean;
-  tabs?: Array<{ id: string; label: string; active: boolean; onClick: () => void }>;
+  tabs?: Array<{ id: string; label: string; icon?: React.ReactNode; active: boolean; onClick: () => void }>;
+  categoryTabs?: Array<{ id: string; label: string; color: string }>;
+  activeCategoryTab?: string;
+  onCategoryTabChange?: (id: string) => void;
   renderItem: (item: any, isActive: boolean, onClick: () => void) => ReactNode;
   renderDetail: (item: any) => ReactNode;
   activeId: string | null;
@@ -42,6 +46,9 @@ export function DataTable({
   onDownload,
   downloading,
   tabs,
+  categoryTabs,
+  activeCategoryTab,
+  onCategoryTabChange,
   renderItem,
   renderDetail,
   activeId,
@@ -232,6 +239,7 @@ export function DataTable({
             <div style={styles.segment} className="dataTableSegment">
               {tabs.map((tab) => (
                 <button key={tab.id} onClick={tab.onClick} style={segBtn(tab.active)}>
+                  {tab.icon && <span style={{ display: 'flex', alignItems: 'center' }}>{tab.icon}</span>}
                   {tab.label}
                 </button>
               ))}
@@ -294,6 +302,24 @@ export function DataTable({
           )}
         </div>
       </div>
+
+      {/* Category Filter Tabs */}
+      {categoryTabs && categoryTabs.length > 0 && onCategoryTabChange && (
+        <div style={styles.categoryTabsRow} className="dataTableCategoryTabs">
+          {categoryTabs.map((ct) => {
+            const isActive = activeCategoryTab === ct.id;
+            return (
+              <button
+                key={ct.id}
+                onClick={() => onCategoryTabChange(ct.id)}
+                style={categoryTabBtn(isActive, ct.color)}
+              >
+                {ct.label}
+              </button>
+            );
+          })}
+        </div>
+      )}
 
       {/* Mobile Search */}
       {isMobile && showMobileSearch && (
@@ -387,13 +413,34 @@ export function DataTable({
 function segBtn(active: boolean) {
   return {
     height: 38,
-    padding: '0 12px',
+    padding: '0 14px',
     borderRadius: borderRadius.sm,
     border: active ? `1px solid ${colors.card.borderAccent}` : `1px solid ${colors.card.border}`,
     background: active ? 'rgba(0,153,249,0.16)' : 'rgba(0,0,0,0.18)',
-    color: colors.text.primary,
+    color: active ? colors.text.primary : colors.text.secondary,
     fontWeight: 900,
     cursor: 'pointer',
+    display: 'flex',
+    alignItems: 'center',
+    gap: 7,
+    fontSize: 13,
+    transition: 'all 150ms ease',
+  };
+}
+
+function categoryTabBtn(active: boolean, color: string) {
+  return {
+    height: 34,
+    padding: '0 16px',
+    borderRadius: borderRadius.sm,
+    border: active ? `1px solid ${color}` : `1px solid ${colors.card.border}`,
+    background: active ? `${color}22` : 'rgba(0,0,0,0.18)',
+    color: active ? color : colors.text.secondary,
+    fontWeight: 800,
+    fontSize: 13,
+    cursor: 'pointer',
+    transition: 'all 150ms ease',
+    letterSpacing: 0.2,
   };
 }
 
@@ -634,5 +681,11 @@ const styles = {
     justifyContent: 'center',
     flex: '0 0 auto',
     transition: 'all 150ms ease',
+  },
+  categoryTabsRow: {
+    display: 'flex',
+    gap: 8,
+    flexWrap: 'wrap' as const,
+    flex: '0 0 auto',
   },
 };
