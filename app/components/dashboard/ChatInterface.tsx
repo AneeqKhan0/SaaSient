@@ -28,6 +28,8 @@ type ChatInterfaceProps = {
   renderMessages: (conversation: any, chatSearch: string) => ReactNode;
   getConversationId: (conversation: any) => string;
   emptyMessage?: string;
+  mobileShowChat?: boolean;
+  onMobileBack?: () => void;
 };
 
 export function ChatInterface({
@@ -46,8 +48,13 @@ export function ChatInterface({
   getConversationId,
   emptyMessage = 'No conversations found.',
   getNickname,
+  mobileShowChat,
+  onMobileBack,
 }: ChatInterfaceProps & { getNickname?: (conversation: any) => string | undefined }) {
-  const [showChat, setShowChat] = useState(false);
+  const isControlled = mobileShowChat !== undefined;
+  const [internalShowChat, setInternalShowChat] = useState(false);
+  const showChat = isControlled ? mobileShowChat : internalShowChat;
+  
   const [isMobile, setIsMobile] = useState(false);
   const [categoryTab, setCategoryTab] = useState<CategoryTab>('all');
   const [chatSearch, setChatSearch] = useState('');
@@ -73,21 +80,25 @@ export function ChatInterface({
   }, []);
 
   useEffect(() => {
-    if (isMobile && activeConversation) {
-      setShowChat(true);
+    if (!isControlled && isMobile && activeConversation) {
+      setInternalShowChat(true);
     }
-  }, [activeConversation, isMobile]);
+  }, [activeConversation, isMobile, isControlled]);
 
   const handleConversationSelect = (conversation: any) => {
     setChatSearch('');
     onConversationSelect(conversation);
-    if (isMobile) {
-      setShowChat(true);
+    if (!isControlled && isMobile) {
+      setInternalShowChat(true);
     }
   };
 
   const handleBackToList = () => {
-    setShowChat(false);
+    if (isControlled && onMobileBack) {
+      onMobileBack();
+    } else {
+      setInternalShowChat(false);
+    }
   };
 
   return (

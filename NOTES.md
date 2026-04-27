@@ -53,11 +53,12 @@ SUPABASE_SERVICE_ROLE_KEY=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...Ja7sVr8oHHHfvbX
 ### WhatsApp Conversations Page (`/dashboard/whatsapp`)
 1. **Category filter tabs** — All / Buyer / Seller / Voice Agent Follow Up. Filters by `label` field on conversations. Sits below the search bar in left panel.
 2. **In-chat search** — "🔍 Search in chat" button in right panel between header and messages. Filters messages and highlights matches in yellow. Full-width when expanded.
+3. **Mobile View Bug Fix** — Fixed the issue where mobile loaded directly into chat or showed a blank screen. Moved `mobileShowChat` visibility state up to `page.tsx` and passed it as a controlled prop. Removed a conflicting `.chatSidebar` CSS rule in `page.tsx` that was causing both panels to hide simultaneously.
 
 **Files changed:**
-- `app/components/dashboard/ChatInterface.tsx` — added category tabs, chat search, `renderMessages` now receives `chatSearch` param
+- `app/components/dashboard/ChatInterface.tsx` — added category tabs, chat search, `isControlled` prop for mobile view
 - `app/components/dashboard/ChatMessage.tsx` — added `highlight` prop for yellow text highlighting
-- `app/dashboard/whatsapp/page.tsx` — updated `renderMessages` to pass `chatSearch`, filter + highlight messages
+- `app/dashboard/whatsapp/page.tsx` — updated `renderMessages` to pass `chatSearch`, filter + highlight messages, and control mobile view state
 
 ---
 
@@ -68,6 +69,8 @@ SUPABASE_SERVICE_ROLE_KEY=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...Ja7sVr8oHHHfvbX
 4. **Filters stack on mobile** — All filter rows stack vertically on ≤768px screens
 5. **Audit Logs date inputs** — Added visible "START DATE" / "END DATE" labels above date inputs (iOS Safari doesn't show placeholder on date inputs)
 6. **MobileMenu border fix** — `borderColor` → `border` shorthand in `navItemActive` to fix React styling warning
+7. **Mobile scroll cutoff iOS fix** — Updated `.adminShell` to use `100dvh` and `overflow-y: auto`. This correctly makes the main shell act as the scroll container and prevents the iOS Safari bottom navigation bar from hiding the bottom of the list.
+8. **Company Detail Auto-Scroll** — When tapping a company on mobile, the view now automatically scrolls to the top (`scrollTop = 0`). When clicking back, it restores the exact previous scroll position using a `useRef`.
 
 **Files changed:**
 - `app/admin/dashboard/layout.tsx` — added `AdminMobileMenu`, mobile CSS
@@ -85,7 +88,6 @@ SUPABASE_SERVICE_ROLE_KEY=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...Ja7sVr8oHHHfvbX
 ## Known Issues / TODO
 
 ### Not Fixed Yet
-- **WhatsApp mobile — opens chat directly instead of list** — The `useEffect` that sets `showChat=true` when `activeConversation` changes causes this on mobile. Multiple fix attempts made but reverted as they broke other things. Needs a different approach — likely passing `initialShowChat=false` from the page and only setting it on explicit user tap.
 - **Admin login on mobile network** — Works on localhost. Mobile access requires same WiFi + firewall rule. Router AP Isolation may be blocking phone↔PC communication. Workaround: use PC hotspot.
 
 ### Pending Features (not started)

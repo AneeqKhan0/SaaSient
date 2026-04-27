@@ -56,6 +56,7 @@ export default function WhatsAppPage() {
   const [fontSizeIdx, setFontSizeIdx] = useState(1); // default 13px
   const [nicknames, setNicknames] = useState<Record<string, string>>({});
   const [userId, setUserId] = useState<string | null>(null);
+  const [mobileShowChat, setMobileShowChat] = useState(false);
 
   const { formatTime } = useFormatters();
 
@@ -103,8 +104,10 @@ export default function WhatsAppPage() {
       const rows = (data || []) as ConversationRow[];
       setConvos(rows);
       setLoadingList(false);
-
-      if (rows.length > 0) setActive(rows[0]);
+      // Auto-select first conversation to avoid blank screen on mobile
+      if (rows.length > 0) {
+        setActive(rows[0]);
+      }
     })();
   }, []);
 
@@ -198,7 +201,12 @@ export default function WhatsAppPage() {
         subtitle="Read-only conversations"
         conversations={filteredConvos}
         activeConversation={active}
-        onConversationSelect={setActive}
+        onConversationSelect={(convo) => {
+          setActive(convo);
+          setMobileShowChat(true);
+        }}
+        mobileShowChat={mobileShowChat}
+        onMobileBack={() => setMobileShowChat(false)}
         searchValue={search}
         onSearchChange={setSearch}
         loading={loadingList}
@@ -309,15 +317,6 @@ export default function WhatsAppPage() {
 
       <style jsx global>{`
         @media (max-width: 768px) {
-          .chatShell {
-            grid-template-columns: 1fr !important;
-          }
-          .chatSidebar {
-            display: none !important;
-          }
-          .chatMain {
-            border-left: none !important;
-          }
           .chatHeaderRow {
             flex-wrap: wrap !important;
             gap: 8px !important;

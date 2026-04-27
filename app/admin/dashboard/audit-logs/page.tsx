@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { AdminDataTable, ColumnDef } from '@/app/components/admin/AdminDataTable';
 import { AuditLogDetailModal } from '@/app/components/admin/AuditLogDetailModal';
 import { colors } from '@/app/components/shared/constants';
@@ -126,13 +126,14 @@ export default function AuditLogsPage() {
         </div>
       </div>
 
-      {/* Filters */}
+      {/* Filters — compact inline */}
       <div style={styles.filtersSection}>
-        <div style={styles.filtersRow} className="filtersRow">
+        {/* Row 1: Action select */}
+        <div style={filterRowStyle}>
           <select
             value={filters.action}
             onChange={(e) => setFilters({ ...filters, action: e.target.value })}
-            style={styles.select}
+            style={{ ...compactSelectStyle, flex: '1 1 auto', minWidth: 140 }}
           >
             <option value="">All Actions</option>
             <option value="company_updated">Company Updated</option>
@@ -140,36 +141,51 @@ export default function AuditLogsPage() {
             <option value="company_activated">Company Activated</option>
             <option value="settings_changed">Settings Changed</option>
           </select>
+        </div>
 
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 4, flex: 1, minWidth: 0 }}>
-            <label style={{ fontSize: 11, fontWeight: 700, color: 'rgba(255,255,255,0.55)', textTransform: 'uppercase', letterSpacing: 0.5 }}>
-              Start Date
-            </label>
-            <input
-              type="date"
-              value={filters.start_date}
-              onChange={(e) => setFilters({ ...filters, start_date: e.target.value })}
-              style={styles.searchInput}
-            />
+        {/* Row 2: Date range + Clear — always in one row */}
+        <div style={dateRowStyle}>
+          <div style={dateFieldStyle}>
+            <label style={dateLabelStyle}>Start Date</label>
+            <div style={dateInputWrapperStyle}>
+              <input
+                type="date"
+                value={filters.start_date}
+                onChange={(e) => setFilters({ ...filters, start_date: e.target.value })}
+                style={{
+                  ...compactDateStyle,
+                  color: filters.start_date ? 'rgba(255,255,255,0.92)' : 'transparent',
+                }}
+              />
+              {!filters.start_date && (
+                <span style={datePlaceholderStyle}>mm/dd/yyyy</span>
+              )}
+            </div>
           </div>
 
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 4, flex: 1, minWidth: 0 }}>
-            <label style={{ fontSize: 11, fontWeight: 700, color: 'rgba(255,255,255,0.55)', textTransform: 'uppercase', letterSpacing: 0.5 }}>
-              End Date
-            </label>
-            <input
-              type="date"
-              value={filters.end_date}
-              onChange={(e) => setFilters({ ...filters, end_date: e.target.value })}
-              style={styles.searchInput}
-            />
+          <div style={dateFieldStyle}>
+            <label style={dateLabelStyle}>End Date</label>
+            <div style={dateInputWrapperStyle}>
+              <input
+                type="date"
+                value={filters.end_date}
+                onChange={(e) => setFilters({ ...filters, end_date: e.target.value })}
+                style={{
+                  ...compactDateStyle,
+                  color: filters.end_date ? 'rgba(255,255,255,0.92)' : 'transparent',
+                }}
+              />
+              {!filters.end_date && (
+                <span style={datePlaceholderStyle}>mm/dd/yyyy</span>
+              )}
+            </div>
           </div>
 
           <button
             onClick={() => setFilters({ company_id: '', action: '', start_date: '', end_date: '' })}
-            style={styles.exportButton}
+            style={clearBtnStyle}
           >
-            Clear Filters
+            Clear
           </button>
         </div>
       </div>
@@ -198,17 +214,96 @@ export default function AuditLogsPage() {
           onClose={() => setSelectedLog(null)}
         />
       )}
-
-      <style jsx>{`
-        @media (max-width: 768px) {
-          :global(.filtersRow) {
-            flex-direction: column !important;
-          }
-          :global(.filtersRow) > * {
-            width: 100% !important;
-          }
-        }
-      `}</style>
     </div>
   );
 }
+
+const filterRowStyle: React.CSSProperties = {
+  display: 'flex',
+  gap: 8,
+  alignItems: 'flex-end',
+  marginBottom: 8,
+};
+
+// Date row — never wraps, always stays on one line
+const dateRowStyle: React.CSSProperties = {
+  display: 'flex',
+  gap: 8,
+  alignItems: 'flex-end',
+  flexWrap: 'nowrap',
+};
+
+const compactSelectStyle: React.CSSProperties = {
+  padding: '8px 10px',
+  background: '#0a0c10',
+  border: '1px solid rgba(255,255,255,0.10)',
+  borderRadius: 10,
+  color: 'rgba(255,255,255,0.92)',
+  fontSize: 13,
+  fontWeight: 600,
+  cursor: 'pointer',
+  outline: 'none',
+  flex: '0 0 auto',
+};
+
+const dateFieldStyle: React.CSSProperties = {
+  display: 'flex',
+  flexDirection: 'column',
+  gap: 4,
+  flex: '1 1 0',
+  minWidth: 0,
+};
+
+const dateLabelStyle: React.CSSProperties = {
+  fontSize: 11,
+  fontWeight: 700,
+  color: 'rgba(255,255,255,0.55)',
+  textTransform: 'uppercase',
+  letterSpacing: 0.5,
+};
+
+// Wrapper to position the placeholder overlay over the date input
+const dateInputWrapperStyle: React.CSSProperties = {
+  position: 'relative',
+  display: 'flex',
+};
+
+// Fake placeholder shown when no date is selected (iOS Safari fix)
+const datePlaceholderStyle: React.CSSProperties = {
+  position: 'absolute',
+  top: '50%',
+  left: 10,
+  transform: 'translateY(-50%)',
+  fontSize: 13,
+  fontWeight: 600,
+  color: 'rgba(255,255,255,0.35)',
+  pointerEvents: 'none',
+  userSelect: 'none',
+};
+
+const compactDateStyle: React.CSSProperties = {
+  padding: '8px 10px',
+  background: '#0a0c10',
+  border: '1px solid rgba(255,255,255,0.10)',
+  borderRadius: 10,
+  fontSize: 13,
+  fontWeight: 600,
+  outline: 'none',
+  colorScheme: 'dark',
+  width: '100%',
+  minWidth: 0,
+};
+
+const clearBtnStyle: React.CSSProperties = {
+  padding: '8px 14px',
+  background: 'rgba(255,255,255,0.06)',
+  border: '1px solid rgba(255,255,255,0.12)',
+  borderRadius: 10,
+  color: 'rgba(255,255,255,0.85)',
+  fontSize: 13,
+  fontWeight: 750,
+  cursor: 'pointer',
+  flex: '0 0 auto',
+  alignSelf: 'flex-end',
+  whiteSpace: 'nowrap',
+};

@@ -155,7 +155,7 @@ export const adminLayoutStyles: Record<string, React.CSSProperties> = {
     main: {
         padding: 18,
         zIndex: 2,
-        minWidth: 0, // prevent grid blowout
+        minWidth: 0,
         overflow: 'hidden',
     },
 
@@ -169,8 +169,8 @@ export const adminLayoutStyles: Record<string, React.CSSProperties> = {
         minHeight: 'calc(100vh - 36px)',
         maxHeight: 'calc(100vh - 36px)',
         boxShadow: '0 30px 110px rgba(0,0,0,0.55)',
-        overflow: 'auto',       // was 'hidden' — now scrollable
-        overflowX: 'hidden',    // no horizontal scroll
+        overflow: 'auto',
+        overflowX: 'hidden',
         display: 'flex',
         flexDirection: 'column',
     },

@@ -4,15 +4,15 @@ import { ACCENT } from '@/app/components/shared/constants';
 export const adminHomeStyles: Record<string, React.CSSProperties> = {
     shell: {
         position: 'relative',
-        height: '100%',
         padding: 18,
         borderRadius: 24,
-        overflow: 'auto',
         overflowX: 'hidden',
+        overflowY: 'visible', // let the page scroll naturally, no inner scroll box
         background:
             'radial-gradient(900px 420px at 18% 0%, rgba(0,153,249,0.22), transparent 60%), radial-gradient(700px 320px at 88% 15%, rgba(0,153,249,0.12), transparent 65%), linear-gradient(180deg, #060606, #050505)',
         border: '1px solid rgba(255,255,255,0.08)',
         boxShadow: '0 30px 120px rgba(0,0,0,0.65)',
+        minHeight: '100%',
     },
 
     noise: {

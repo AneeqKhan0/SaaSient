@@ -158,12 +158,11 @@ export default function AdminDashboardLayout({ children }: { children: ReactNode
         /* ── Mobile responsive ── */
         @media (max-width: 768px) {
           .adminShell {
-            grid-template-columns: 1fr !important;
-            grid-template-rows: auto 1fr !important;
+            display: block !important;
             overflow-x: hidden !important;
             overflow-y: auto !important;
-            height: auto !important;
-            min-height: 100vh !important;
+            height: 100vh !important;
+            height: 100dvh !important;
             width: 100vw !important;
             max-width: 100vw !important;
           }
@@ -172,15 +171,15 @@ export default function AdminDashboardLayout({ children }: { children: ReactNode
           }
           .adminMobileTopBar {
             display: flex !important;
-            grid-column: 1 !important;
           }
           .adminMain {
-            grid-column: 1 !important;
             padding: 8px !important;
             min-width: 0 !important;
-            overflow: hidden !important;
+            overflow: visible !important;
             width: 100% !important;
             box-sizing: border-box !important;
+            height: auto !important;
+            display: block !important;
           }
           .adminContent {
             min-height: auto !important;
@@ -191,17 +190,27 @@ export default function AdminDashboardLayout({ children }: { children: ReactNode
             padding: 12px !important;
             width: 100% !important;
             box-sizing: border-box !important;
-          }
-          /* Prevent any child from causing horizontal overflow */
-          .adminContent * {
-            max-width: 100% !important;
-            box-sizing: border-box !important;
-          }
-          /* Fix table overflow on mobile */
-          .adminContent table {
             display: block !important;
-            overflow-x: auto !important;
-            white-space: nowrap !important;
+            flex-direction: unset !important;
+          }
+          /* Page shell inside adminContent */
+          .adminContent > div {
+            min-height: auto !important;
+            height: auto !important;
+            overflow: visible !important;
+            padding-bottom: 120px !important;
+            display: block !important;
+          }
+        }
+
+        /* Desktop: dropdown options dark background */
+        @media (min-width: 769px) {
+          .adminContent > div {
+            overflow: auto !important;
+          }
+          select option {
+            background: #0a0c10 !important;
+            color: #fff !important;
           }
         }
       `}</style>

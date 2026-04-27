@@ -8,9 +8,10 @@ type CompanyDetailPanelProps = {
   company: CompanyWithMetrics;
   onClose: () => void;
   onUpdate: () => void;
+  inline?: boolean; // when true, renders inline (no overlay) for mobile
 };
 
-export function CompanyDetailPanel({ company, onClose, onUpdate }: CompanyDetailPanelProps) {
+export function CompanyDetailPanel({ company, onClose, onUpdate, inline = false }: CompanyDetailPanelProps) {
   const [isEditing, setIsEditing] = useState(false);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -80,18 +81,20 @@ export function CompanyDetailPanel({ company, onClose, onUpdate }: CompanyDetail
   const showCapacityWarning = formData.max_leads < company.current_leads;
 
   return (
-    <div style={styles.overlay} onClick={onClose}>
-      <div style={styles.content} onClick={(e) => e.stopPropagation()}>
-        {/* Header */}
-        <div style={styles.header}>
-          <div>
-            <div style={styles.title}>{company.name}</div>
-            <div style={styles.subtitle}>{company.slug}</div>
+    <div style={inline ? styles.inlineWrapper : styles.overlay} onClick={inline ? undefined : onClose}>
+      <div style={inline ? styles.inlineContent : styles.content} onClick={(e) => e.stopPropagation()}>
+        {/* Header — hidden in inline mode, back button handled by parent */}
+        {!inline && (
+          <div style={styles.header}>
+            <div>
+              <div style={styles.title}>{company.name}</div>
+              <div style={styles.subtitle}>{company.slug}</div>
+            </div>
+            <button style={styles.closeButton} onClick={onClose}>
+              ✕
+            </button>
           </div>
-          <button style={styles.closeButton} onClick={onClose}>
-            ✕
-          </button>
-        </div>
+        )}
 
         {/* Body */}
         <div style={styles.body}>
@@ -288,6 +291,16 @@ const styles: Record<string, CSSProperties> = {
     overflow: 'auto',
     boxShadow: '0 40px 140px rgba(0,0,0,0.75)',
   },
+  inlineWrapper: {
+    width: '100%',
+  },
+  inlineContent: {
+    width: '100%',
+    background: 'transparent',
+    border: 'none',
+    borderRadius: 0,
+    overflow: 'visible',
+  },
   header: {
     display: 'flex',
     justifyContent: 'space-between',
@@ -357,8 +370,8 @@ const styles: Record<string, CSSProperties> = {
   },
   grid: {
     display: 'grid',
-    gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))',
-    gap: 16,
+    gridTemplateColumns: 'repeat(2, minmax(0, 1fr))',
+    gap: 12,
   },
   field: {
     padding: 12,
