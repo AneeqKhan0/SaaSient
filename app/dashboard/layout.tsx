@@ -186,7 +186,8 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
             padding: 14px !important;
             overflow: hidden !important;
           }
-          .dashContent { 
+          .dashContent {
+            height: calc(100vh - 80px) !important;
             min-height: calc(100vh - 80px) !important;
             max-height: calc(100vh - 80px) !important;
             padding: 14px !important;
@@ -199,6 +200,7 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
             padding: 10px !important;
           }
           .dashContent {
+            height: calc(100vh - 70px) !important;
             border-radius: 12px !important;
             padding: 12px !important;
             min-height: calc(100vh - 70px) !important;

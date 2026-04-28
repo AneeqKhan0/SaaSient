@@ -169,10 +169,11 @@ export const layoutStyles: Record<string, React.CSSProperties> = {
         backdropFilter: 'blur(10px)',
         WebkitBackdropFilter: 'blur(10px)',
         padding: 18,
+        height: 'calc(100vh - 36px)',
         minHeight: 'calc(100vh - 36px)',
         maxHeight: 'calc(100vh - 36px)',
         boxShadow: '0 30px 110px rgba(0,0,0,0.55)',
-        overflow: 'hidden', // Changed from 'auto' to 'hidden'
+        overflow: 'hidden',
         display: 'flex',
         flexDirection: 'column',
     },

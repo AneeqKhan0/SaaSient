@@ -15,21 +15,11 @@ export function DetailPanel({ title, subtitle, children, searchable = false }: D
   const [showSearch, setShowSearch] = useState(false);
 
   return (
-    <div style={styles.container}>
+    <div style={styles.container} className="detail-panel-container">
       <style jsx>{`
         @media (max-width: 980px) {
-          .detail-panel-container {
-            height: 100vh !important;
-            max-height: 100vh !important;
-          }
           .detail-panel-body {
-            max-height: calc(100vh - 120px) !important;
             -webkit-overflow-scrolling: touch !important;
-          }
-        }
-        @media (max-width: 640px) {
-          .detail-panel-body {
-            max-height: calc(100vh - 140px) !important;
           }
         }
       `}</style>
@@ -92,9 +82,9 @@ const styles = {
   container: {
     display: 'flex',
     flexDirection: 'column' as const,
-    height: '100%',
+    flex: '1 1 0px',
     minHeight: 0,
-    maxHeight: '100%',
+    overflow: 'hidden',
   },
   header: {
     padding: spacing.md,
@@ -176,7 +166,7 @@ const styles = {
     paddingBottom: 32,
     overflow: 'auto',
     minHeight: 0,
-    flex: '1 1 auto',
+    flex: '1 1 0px',
     WebkitOverflowScrolling: 'touch' as const,
   },
 };
