@@ -7,20 +7,24 @@ type SelectOption = {
 };
 
 type SelectProps = {
+  id?: string;
   label: string;
   value: string;
   onChange: (value: string) => void;
   options: SelectOption[];
+  required?: boolean;
 };
 
-export function Select({ label, value, onChange, options }: SelectProps) {
+export function Select({ id, label, value, onChange, options, required }: SelectProps) {
   return (
     <div style={styles.container}>
       <label style={styles.label}>{label}</label>
       <select
+        id={id}
         value={value}
         onChange={(e) => onChange(e.target.value)}
         style={styles.select}
+        required={required}
       >
         {options.map((option) => (
           <option key={option.value} value={option.value}>

@@ -11,7 +11,13 @@ type WeekViewProps = {
     formatTime: (ts: string) => string;
 };
 
-export function WeekView({ weekDays, byDay, setActive, loading, formatTime }: WeekViewProps) {
+const getLeadName = (lead: LeadAppointmentRow): string => {
+    return lead.Full_name?.trim() ||
+           `${lead.First_Name || ''} ${lead.Last_Name || ''}`.trim() ||
+           'Unknown';
+};
+
+export function WeekView({ weekDays, byDay, setActive, loading: _loading, formatTime }: WeekViewProps) {
     return (
         <div style={styles.weekView} className="weekView">
             <style jsx global>{`

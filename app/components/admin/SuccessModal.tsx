@@ -2,16 +2,23 @@ import { CSSProperties } from 'react';
 import { colors } from '../shared/constants';
 
 type SuccessModalProps = {
-  message: string;
+  companyName: string;
+  email: string;
+  companyId: string;
   onClose: () => void;
 };
 
-export function SuccessModal({ message, onClose }: SuccessModalProps) {
+export function SuccessModal({ companyName, email, companyId, onClose }: SuccessModalProps) {
   return (
     <div style={styles.overlay} onClick={onClose}>
       <div style={styles.content} onClick={(e) => e.stopPropagation()}>
         <div style={styles.icon}>✅</div>
-        <div style={styles.message}>{message}</div>
+        <div style={styles.message}>Customer account created successfully!</div>
+        <div style={styles.details}>
+          <div><strong>Company:</strong> {companyName}</div>
+          <div><strong>Email:</strong> {email}</div>
+          <div><strong>ID:</strong> {companyId}</div>
+        </div>
         <button style={styles.button} onClick={onClose}>
           Close
         </button>
@@ -49,7 +56,16 @@ const styles: Record<string, CSSProperties> = {
     fontSize: 16,
     fontWeight: 700,
     color: colors.text.primary,
+    marginBottom: 12,
+  },
+  details: {
+    fontSize: 14,
+    color: colors.text.tertiary,
     marginBottom: 24,
+    display: 'flex',
+    flexDirection: 'column',
+    gap: 4,
+    textAlign: 'left',
   },
   button: {
     padding: '12px 24px',

@@ -166,7 +166,7 @@ export function CompanyDetailPanel({ company, onClose, onUpdate, inline = false 
                   <Select
                     label="Plan"
                     value={formData.plan}
-                    onChange={(value) => setFormData({ ...formData, plan: value })}
+                    onChange={(value) => setFormData({ ...formData, plan: value as 'starter' | 'pro' | 'enterprise' })}
                     options={[
                       { value: 'starter', label: 'Starter' },
                       { value: 'pro', label: 'Pro' },
