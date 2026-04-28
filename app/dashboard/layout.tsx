@@ -16,9 +16,10 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
   useEffect(() => {
     (async () => {
       const COMPANY_ID = process.env.NEXT_PUBLIC_COMPANY_ID;
-      
-      const { data } = await supabase.auth.getSession();
-      if (!data.session) {
+
+      const { data, error } = await supabase.auth.getSession();
+      if (error || !data.session) {
+        await supabase.auth.signOut();
         router.replace('/login');
         return;
       }

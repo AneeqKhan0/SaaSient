@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState, CSSProperties } from 'react';
+import React, { useEffect, useState, CSSProperties } from 'react';
 import { supabase } from '@/lib/supabaseClient';
 import { Button } from '@/app/components/shared/Button';
 import { Input } from '@/app/components/shared/Input';
@@ -311,8 +311,8 @@ export default function SettingsPage() {
                   </thead>
                   <tbody>
                     {users.map((user) => (
-                      <>
-                        <tr key={user.id} style={styles.tableRow}>
+                      <React.Fragment key={user.id}>
+                        <tr style={styles.tableRow}>
                           <td style={styles.tableCell}>
                             {user.email}
                             {user.id === currentUserId && (
@@ -374,7 +374,7 @@ export default function SettingsPage() {
                             </td>
                           </tr>
                         )}
-                      </>
+                      </React.Fragment>
                     ))}
                   </tbody>
                 </table>
