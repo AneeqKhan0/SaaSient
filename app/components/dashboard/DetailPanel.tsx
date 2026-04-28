@@ -173,10 +173,10 @@ const styles = {
   },
   body: {
     padding: spacing.md,
+    paddingBottom: 32,
     overflow: 'auto',
     minHeight: 0,
     flex: '1 1 auto',
-    maxHeight: '65vh',
     WebkitOverflowScrolling: 'touch' as const,
   },
 };
