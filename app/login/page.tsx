@@ -27,9 +27,9 @@ export default function LoginPage() {
       const { data } = await supabase.auth.getSession();
       if (!data.session) return;
 
-      const { data: aal } = await supabase.auth.mfa.getAuthenticatorAssuranceLevel();
-      if (aal?.nextLevel === 'aal2') router.replace('/auth/mfa');
-      else router.replace('/dashboard');
+      // If a session already exists at aal1, the user still needs to complete
+      // email OTP verification — redirect to the MFA page, not the dashboard.
+      router.replace('/auth/mfa');
     })();
   }, [router]);
 
@@ -94,22 +94,12 @@ export default function LoginPage() {
     // Reset rate limiter on successful login
     rateLimiter.reset(sanitizedEmail);
 
-    // Step 3: Check MFA
-    const { data: aal, error: aalErr } = await supabase.auth.mfa.getAuthenticatorAssuranceLevel();
+    // Step 3: Store email for MFA page (needed for signInWithOtp)
+    sessionStorage.setItem('mfa_email', sanitizedEmail);
+
+    // Step 4: Always redirect to MFA verification after successful password auth.
     setLoading(false);
-
-    if (aalErr) {
-      setMessage(aalErr.message);
-      return;
-    }
-
-    if (aal?.nextLevel === 'aal2') {
-      router.replace('/auth/mfa');
-      return;
-    }
-
-    // Step 4: Allow access to dashboard
-    router.replace('/dashboard');
+    router.replace('/auth/mfa');
   }
 
   return (

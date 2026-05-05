@@ -1,125 +1,153 @@
-# SaaSient Dashboard — Session Notes
+# Project Notes
 
-## Project Overview
-Multi-tenant SaaS dashboard — "Lead & Conversation Hub" for managing WhatsApp/Voice agent leads, conversations, appointments, and usage analytics.
+## Email OTP Multi-Factor Authentication (MFA)
 
-**Stack:** Next.js 16 (App Router), React 19, TypeScript, Supabase (PostgreSQL + Auth + Realtime), FullCalendar, Tailwind CSS 4
-
-**Run:** `cd SaaSient && npm run dev` → http://localhost:3000
-**Mobile access:** http://192.168.18.242:3000 (same WiFi required, firewall rule added)
+### Overview
+Implemented email-based OTP (One-Time Password) MFA for the user dashboard login flow.
+Uses Supabase's built-in OTP system — no third-party email services, no custom token storage.
 
 ---
 
-## Environment (.env.local)
+### How It Works
+
+#### Full Login Flow
 ```
-NEXT_PUBLIC_COMPANY_ID=d83662ef-04f3-4608-bdda-1ee9a5df0f39
-NEXT_PUBLIC_SUPABASE_URL=https://tbspnkniqtylgjinxdym.supabase.co
-NEXT_PUBLIC_SUPABASE_ANON_KEY=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...f-pvumfIVXEwUdESLNPQs9-ypjH-Vx019P_ipvGfyvg
-SUPABASE_SERVICE_ROLE_KEY=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...Ja7sVr8oHHHfvbXUr_J94Q_xYc010mDkUtBJC6kLsLI
+User enters email + password
+        ↓
+supabase.auth.signInWithPassword()
+        ↓
+Company membership check (company_members table)
+        ↓
+Email saved to sessionStorage
+        ↓
+Redirect to /auth/mfa
+        ↓
+7-day localStorage check
+  → Valid: skip OTP → /dashboard
+  → Expired/missing: proceed with OTP
+        ↓
+POST /api/auth/mfa/send
+  → supabaseAdmin.auth.signInWithOtp({ email, shouldCreateUser: false })
+  → Supabase generates token, sends email via {{ .Token }} template
+        ↓
+User enters 6-digit code
+        ↓
+POST /api/auth/mfa/verify
+  → supabaseAdmin.auth.verifyOtp({ email, token, type: 'email' })
+  → Supabase verifies its own token
+        ↓
+localStorage.setItem('mfa_verified_until_<userId>', <7-day timestamp>)
+        ↓
+Redirect to /dashboard
 ```
-> Note: Both JWT keys may be truncated — if "Invalid API key" error appears, re-paste from Supabase Dashboard → Project Settings → API
+
+#### Sign Out Flow
+```
+supabase.auth.signOut()
+localStorage.removeItem('mfa_verified_until_<userId>')
+Redirect to /login
+```
 
 ---
 
-## Two Separate Dashboards
+### Key Design Decisions
 
-### 1. Client Dashboard (`/dashboard`)
-- Login: `/login` — Supabase Auth, validates against `company_members` table for `NEXT_PUBLIC_COMPANY_ID`
-- Pages: Overview, Qualified Leads, WhatsApp Conversations, Appointments, Plan Usage, Settings
+1. **Supabase-only approach** — `signInWithOtp` + `verifyOtp` handles token generation,
+   storage, expiry, and email delivery. No custom OTP table needed.
 
-### 2. Admin Portal (`/admin/dashboard`)
-- Login: `/admin/login` — custom `admin_users` table (plain text password in `password_hash` column)
-- Admin credentials: `aneeq.paradise@gmail.com` / `Aneeq123`
-- Pages: Platform Dashboard, Companies, Audit Logs
+2. **7-day session persistence** — After successful OTP verification, a timestamp is stored
+   in `localStorage` keyed by `userId`. For 7 days, the OTP step is skipped on login.
+   After 7 days or on sign-out, OTP is required again.
 
----
+3. **Email passed via sessionStorage** — Login page stores the user's email in
+   `sessionStorage` so the MFA page can pass it to `signInWithOtp` and `verifyOtp`.
+   Falls back to `session.user.email` if sessionStorage is unavailable.
 
-## All Changes Made This Session
-
-### Qualified Leads Page (`/dashboard/leads`)
-1. **Hot/Warm/Cold filter tabs** — Added below the WhatsApp/Voice Agent toggle. Filters `lead_category` field client-side. Default = "All". Resets when switching agent tabs.
-2. **WhatsApp Agent icon** — Real WhatsApp SVG logo on the tab button
-3. **Voice Agent icon** — Robot/AI SVG icon on the tab button
-4. **In-detail search** — Search bar inside the lead detail panel (right side). Filters and highlights matching key-value fields in yellow. Toggle button in detail panel header.
-
-**Files changed:**
-- `app/dashboard/leads/page.tsx`
-- `app/components/dashboard/DataTable.tsx` — added `categoryTabs`, `icon` support on tabs
-- `app/components/dashboard/DetailPanel.tsx` — added `searchable` prop, render function children
-- `app/components/dashboard/KeyValueGrid.tsx` — added `searchQuery` prop, filtering + highlighting
+4. **No third-party email** — Resend was tested but removed. Supabase's built-in SMTP
+   handles all email delivery via the Magic Link email template.
 
 ---
 
-### WhatsApp Conversations Page (`/dashboard/whatsapp`)
-1. **Category filter tabs** — All / Buyer / Seller / Voice Agent Follow Up. Filters by `label` field on conversations. Sits below the search bar in left panel.
-2. **In-chat search** — "🔍 Search in chat" button in right panel between header and messages. Filters messages and highlights matches in yellow. Full-width when expanded.
-3. **Mobile View Bug Fix** — Fixed the issue where mobile loaded directly into chat or showed a blank screen. Moved `mobileShowChat` visibility state up to `page.tsx` and passed it as a controlled prop. Removed a conflicting `.chatSidebar` CSS rule in `page.tsx` that was causing both panels to hide simultaneously.
+### Files Modified / Created
 
-**Files changed:**
-- `app/components/dashboard/ChatInterface.tsx` — added category tabs, chat search, `isControlled` prop for mobile view
-- `app/components/dashboard/ChatMessage.tsx` — added `highlight` prop for yellow text highlighting
-- `app/dashboard/whatsapp/page.tsx` — updated `renderMessages` to pass `chatSearch`, filter + highlight messages, and control mobile view state
-
----
-
-### Admin Portal — Mobile Responsiveness
-1. **Hamburger menu** — New `AdminMobileMenu` component. Sticky top bar with logo + Admin badge + hamburger. Slides in drawer with nav links, user info, sign out.
-2. **Horizontal overflow fixed** — `shell` overflow changed, `main` got `minWidth: 0`, search input `minWidth` removed, metrics grid `minmax` reduced to 140px
-3. **Content cut off at bottom fixed** — `content` changed from `overflow: hidden` to `overflow: auto`, `maxHeight` removed on mobile, `marginBottom` added to table sections
-4. **Filters stack on mobile** — All filter rows stack vertically on ≤768px screens
-5. **Audit Logs date inputs** — Added visible "START DATE" / "END DATE" labels above date inputs (iOS Safari doesn't show placeholder on date inputs)
-6. **MobileMenu border fix** — `borderColor` → `border` shorthand in `navItemActive` to fix React styling warning
-7. **Mobile scroll cutoff iOS fix** — Updated `.adminShell` to use `100dvh` and `overflow-y: auto`. This correctly makes the main shell act as the scroll container and prevents the iOS Safari bottom navigation bar from hiding the bottom of the list.
-8. **Company Detail Auto-Scroll** — When tapping a company on mobile, the view now automatically scrolls to the top (`scrollTop = 0`). When clicking back, it restores the exact previous scroll position using a `useRef`.
-
-**Files changed:**
-- `app/admin/dashboard/layout.tsx` — added `AdminMobileMenu`, mobile CSS
-- `app/components/admin/AdminMobileMenu.tsx` — new file
-- `app/components/admin/styles/adminDashboardLayout.ts` — overflow, minWidth fixes
-- `app/components/admin/styles/adminDashboardHome.ts` — metrics grid, search input, table section fixes
-- `app/admin/dashboard/page.tsx` — filter classNames, mobile CSS
-- `app/admin/dashboard/companies/page.tsx` — filter classNames, mobile CSS
-- `app/admin/dashboard/audit-logs/page.tsx` — date input labels, filter classNames, mobile CSS
-- `app/components/admin/AdminDataTable.tsx` — touch scroll, mobile font size
-- `app/components/dashboard/MobileMenu.tsx` — border shorthand fix
+| File | Change |
+|------|--------|
+| `app/login/page.tsx` | Removed aal2 check; added sessionStorage email save; redirect to /auth/mfa |
+| `app/auth/mfa/page.tsx` | New — OTP verification page with 7-day check, send/verify flow, resend with cooldown |
+| `app/api/auth/mfa/send/route.ts` | New — calls `signInWithOtp` |
+| `app/api/auth/mfa/verify/route.ts` | New — calls `verifyOtp` |
+| `app/dashboard/layout.tsx` | Sign-out clears `mfa_verified_until_<userId>` from localStorage |
+| `lib/otp.ts` | Kept only `isValidOtpFormat()` helper |
+| `.env.local` | Added `RESEND_API_KEY` (unused now), all Supabase keys present |
 
 ---
 
-## Known Issues / TODO
+### Environment Variables Required
 
-### Not Fixed Yet
-- **Admin login on mobile network** — Works on localhost. Mobile access requires same WiFi + firewall rule. Router AP Isolation may be blocking phone↔PC communication. Workaround: use PC hotspot.
-
-### Pending Features (not started)
-- Nothing explicitly requested but not done
-
----
-
-## Key Database Tables
-| Table | Purpose |
-|-------|---------|
-| `companies` | SaaS customers (plan, max_leads, status) |
-| `company_members` | User-company relationships + roles |
-| `lead_store` | Lead data (phone, email, Lead Category, Source, appointment_time) |
-| `whatsapp_conversations` | WhatsApp threads (label field = Buyer/Seller/Voice agent Follow up) |
-| `Conversations` | Message history |
-| `admin_users` | Platform admins (email, password_hash plain text, is_active bool) |
-| `audit_logs` | Admin action tracking |
-
-## Lead Source Values (exact, case-sensitive)
-- WhatsApp Agent tab: `Source = 'WhatsApp agent'` (lowercase 'a')
-- Voice Agent tab: `Source = 'Voice Agent'`
-
-## Lead Category Values
-- `HOT`, `WARM`, `COLD` (uppercase in DB)
-
-## WhatsApp Conversation Label Values
-- `Buyer`, `Seller`, `Voice agent Follow up` (mixed case in DB)
-- Filter matching is case-insensitive, whitespace-stripped
+```env
+NEXT_PUBLIC_COMPANY_ID=<company-uuid>
+NEXT_PUBLIC_SUPABASE_URL=<supabase-project-url>
+NEXT_PUBLIC_SUPABASE_ANON_KEY=<supabase-anon-key>
+SUPABASE_SERVICE_ROLE_KEY=<supabase-service-role-key>
+```
 
 ---
 
-## Dev Server Notes
-- `package.json` dev script: `next dev -H 0.0.0.0` (binds all interfaces for mobile access)
-- Port 3000 firewall rule added on Windows
-- `.next` cache can be cleared with: `Remove-Item -Recurse -Force SaaSient\.next`
+### Supabase Dashboard Configuration
+
+**Authentication → Email Templates → Magic Link**
+
+Subject:
+```
+Your verification code
+```
+
+Body:
+```html
+<h2>Your verification code</h2>
+<p>Enter this code to complete your login. It expires in <strong>10 minutes</strong>.</p>
+<div style="font-size:40px;font-weight:bold;letter-spacing:12px;text-align:center;
+            padding:24px;background:#f4f4f5;border-radius:8px;">
+  {{ .Token }}
+</div>
+<p style="color:#888;font-size:13px;">
+  If you did not request this code, you can safely ignore this email.
+</p>
+```
+
+---
+
+### What Was NOT Implemented (Future Work)
+
+- MFA for admin login (`/admin/login`) — same approach can be applied
+- Rate limiting on OTP attempts (Supabase handles this internally)
+- `mfa_otp_codes` custom table — was created but is no longer needed, can be dropped
+
+---
+
+### Packages
+
+- `resend` — installed but no longer used (can be removed with `npm uninstall resend`)
+- `@supabase/supabase-js` — handles all auth including OTP
+
+---
+
+### Notes on 7-Day Session Logic
+
+```typescript
+// Key format: mfa_verified_until_<userId>
+// Value: Unix timestamp (milliseconds) of expiry
+
+// Set after successful OTP verification:
+localStorage.setItem(`mfa_verified_until_${userId}`, String(Date.now() + 7 * 24 * 60 * 60 * 1000))
+
+// Check on MFA page load:
+const raw = localStorage.getItem(`mfa_verified_until_${userId}`)
+const isValid = raw && Date.now() < parseInt(raw, 10)
+
+// Clear on sign-out:
+localStorage.removeItem(`mfa_verified_until_${userId}`)
+```
+
+This is per-user (keyed by userId) so multiple users on the same browser
+each have their own independent 7-day window.
